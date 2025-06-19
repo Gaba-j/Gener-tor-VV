@@ -85,7 +85,7 @@
                 border-color: #000; /* Darker borders for print */
             }
             /* Adjust margins and padding for better print layout */
-            .p-4, .sm:p-6, .md:p-8 {
+            .p-4, .sm\:p-6, .md\:p-8 {
                 padding: 0.5cm !important;
             }
         }
@@ -194,17 +194,7 @@
 
         <!-- Výsledek protokolu (hidden by default) -->
         <div id="protocolOutputContainer" class="mt-8 hidden">
-            <!-- Protocol content will be generated here as a table -->
-            <div class="flex flex-col sm:flex-row justify-center gap-4 mt-4 no-print-element">
-                <button id="printProtocol"
-                        class="bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-5 rounded-lg shadow-md transform transition duration-300 ease-in-out hover:scale-105 text-base w-full sm:w-auto">
-                    Tisk protokolu (do PDF)
-                </button>
-                <button id="copyToClipboard"
-                        class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-5 rounded-lg shadow-md transform transition duration-300 ease-in-out hover:scale-105 text-base w-full sm:w-auto">
-                    Kopírovat do schránky (pro Word)
-                </button>
-            </div>
+            <!-- Protocol content will be generated here -->
         </div>
 
         <!-- Zpráva o kopírování -->
@@ -220,8 +210,6 @@
         import { getFirestore, doc, getDoc, setDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase setup variables (provided by Canvas environment)
-        // These are global variables provided by the Canvas environment.
-        // We ensure they are defined, otherwise provide a fallback for local testing without Canvas.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
         let firebaseConfig = {};
@@ -234,7 +222,7 @@
         let app;
         let db = null;
         let auth = null;
-        let userId = null; // Will be set after authentication
+        let userId = null;
 
         // DOM Elements
         const dateInput = document.getElementById('dateInput');
@@ -252,12 +240,12 @@
         const generateProtocolBtn = document.getElementById('generateProtocol');
         const resetAppBtn = document.getElementById('resetApp');
         const protocolOutputContainer = document.getElementById('protocolOutputContainer');
-        const inputUI = document.getElementById('inputUI'); // Reference to the main input section wrapper
+        const inputUI = document.getElementById('inputUI');
+        const copyMessage = document.getElementById('copyMessage');
+        
+        // Variables to hold protocol content for copying
         let protocolOutputHtmlContent = '';
         let protocolOutputPlainContent = '';
-        const copyToClipboardBtn = document.getElementById('copyToClipboard');
-        const printProtocolBtn = document.getElementById('printProtocol');
-        const copyMessage = document.getElementById('copyMessage');
 
         // Firebase Initialization and Authentication
         function initializeFirebase() {
@@ -293,7 +281,7 @@
                 }
             } else {
                 console.warn("Firebase configuration is missing or invalid. Save/Load features will not be available.");
-                storageMessage.textContent = "Funkce ukládání/načítání (databáze) nejsou dostupné při spuštění souboru lokálně kvůli bezpečnostním omezením prohlížeče. Fungovat budou pouze online.";
+                storageMessage.textContent = "Funkce ukládání/načítání (databáze) nejsou dostupné. Spusťte aplikaci online, nikoli z lokálního souboru.";
                 storageMessage.style.color = 'orange';
                 storageMessage.classList.remove('hidden');
                 saveProtocolBtn.disabled = true;
@@ -301,14 +289,7 @@
             }
         }
 
-        // Predefined data
-        const roomTypes = [
-            "Obývací pokoj", "Kuchyně", "Ložnice", "Koupelna", "Chodba",
-            "Komora", "Pracovna", "Dětský pokoj", "WC", "Technická místnost",
-            "Sklad", "Předsíň", "Garáž", "Terasa", "Balkón", "Půda", "Sklep",
-            "Jiná"
-        ];
-
+        // Predefined data (influences, wiring systems, etc.)
         const influenceCategories = [
             {
                 label: "Atmosférické a mechanické vlivy:",
@@ -331,7 +312,7 @@
                 influences: [
                     { value: "AF - Korozivní/znečišťující látky", text: "AF - Korozivní/znečišťující látky" },
                     { value: "AK - Výskyt rostlinstva nebo plísní", text: "AK - Výskyt rostlinstva nebo plísní" },
-                    { value: "AL - Výskyt živočichů", text: "AL - Výskyt živočíchů" },
+                    { value: "AL - Výskyt živočichů", text: "AL - Výskyt živočichů" },
                     { value: "AN - Sluneční záření a ultrafialové záření", text: "AN - Sluneční záření a ultrafialové záření" },
                     { value: "AP - Seizmické účinky", text: "AP - Seizmické účinky" },
                     { value: "AR - Vítr", text: "AR - Vítr" }
@@ -353,135 +334,14 @@
                 ]
             }
         ];
-
-        // Comprehensive details for explanations, including article references
-        const influenceDetails = {
-            "AA - Okolní teplota": {
-                article: "522.1",
-                explanation: "Vedení musí být zvolena a zřízena tak, aby odpovídala všem teplotám mezi nejvyšší a nejnižší teplotou okolí v místě instalace a aby nebyly překročeny mezní teploty při normálním provozu a v případě poruchy."
-            },
-            "AB - Vysoká vlhkost": {
-                article: "522.3",
-                explanation: "Vedení musí být zvolena a zřízena tak, aby nedošlo k žádnému poškození kondenzací vzdušné vlhkosti nebo vniknutím vody. Hotová vedení musí vyhovovat stupni ochrany IP."
-            },
-            "AD - Přítomnost vody": {
-                article: "522.3",
-                explanation: "Vedení musí být zvolena a zřízena tak, aby nedošlo k žádnému poškození kondenzací vzdušné vlhkosti nebo vniknutím vody (např. stříkající voda, ponoření). Hotová vedení musí vyhovovat stupni ochrany IP."
-            },
-            "AE - Přítomnost cizích pevných těles": {
-                article: "522.4",
-                explanation: "Vedení musí být zvolena a zřízena tak, aby se minimalizovalo nebezpečí od vniknutí cizích pevných těles (např. prach, úlomky). Hotová vedení musí odpovídat stupni ochrany krytem IP."
-            },
-            "AF - Korozivní/znečišťující látky": {
-                article: "522.5",
-                explanation: "Pokud je pravděpodobná přítomnost korozivních nebo znečišťujících látek, musí být části vedení vhodně chráněny nebo vyrobeny z odolného materiálu (např. chemické výpary, solanka)."
-            },
-            "AG - Ráz": {
-                article: "522.6",
-                explanation: "Vedení musí být zvolena a zřízena tak, aby se minimalizovalo nebezpečí od mechanického namáhání, např. rázem, úderem nebo stlačením (např. prostory s vysokozdvižnými vozíky)."
-            },
-            "AH - Vibrace": {
-                article: "522.7",
-                explanation: "Vedení podepíraná nebo připevněná k vibrujícím zařízením musí být pro tyto podmínky vhodná, zvláště kabely a kabelové spoje (např. připojení k motorům)."
-            },
-            "AJ - Ostatní mechanická namáhání": {
-                article: "522.8",
-                explanation: "Vedení musí být zvolena a zřízena tak, aby se zabránilo poškození kabelů a jejich zakončení během instalace, používání nebo údržby (např. tahové namáhání, ohyby, upevnění, uložení v zemi)."
-            },
-            "AK - Výskyt rostlinstva nebo plísní": {
-                article: "522.9",
-                explanation: "V místech s prokázaným nebo předpokládaným rizikem růstu rostlinstva nebo plísní musí být vedení vhodně zvolena nebo přijata zvláštní ochranná opatření (např. uzavřené systémy)."
-            },
-            "AL - Výskyt živočichů": {
-                article: "522.10",
-                explanation: "V místech s prokázaným nebo předpokládaným rizikem působení živočichů (např. hlodavců) musí být vedení vhodně zvolena nebo přijata zvláštní ochranná opatření (např. mechanická ochrana)."
-            },
-            "AN - Sluneční záření a ultrafialové záření": {
-                article: "522.11",
-                explanation: "Vystavená vedení musí být pro tyto podmínky vhodného provedení nebo vybavena odpovídajícím stíněním proti slunečnímu a ultrafialovému záření."
-            },
-            "AP - Seizmické účinky": {
-                article: "522.12",
-                explanation: "Vedení musí být zvolena a instalována s řádným ohledem na seizmická nebezpečí v místě instalace, s důrazem na upevnění a poddajnost spojení."
-            },
-            "AR - Vítr": {
-                article: "522.13",
-                explanation: "Vlivy větru je třeba posuzovat ve spojení s vibracemi (AH) a ostatním mechanickým namáháním (AJ), které mohou způsobit poškození vedení."
-            },
-            "BE - Povaha zpracovávaných nebo skladovaných látek": {
-                article: "522.14",
-                explanation: "Je třeba brát ohled na povahu látek, které mohou ovlivnit požární bezpečnost instalace. Viz také článek 422 (ochrana před požárem) a 527 (omezení šíření požáru)."
-            },
-            "CB - Konstrukce budovy": {
-                article: "522.15",
-                explanation: "Vedení musí být zvolena a instalována s ohledem na možný posun konstrukce (např. dilatace) tak, aby vodiče a kabely nebyly vystaveny nadměrnému mechanickému namáhání."
-            },
-            "BA - Způsobilost osob": {
-                article: "ČSN 33 2000-4-41 (Obecně)",
-                explanation: "Nutnost zohlednit úroveň způsobilosti osob (např. znalé, poučené, laici) při návrhu a umístění elektrických instalací pro zajištění ochrany před úrazem elektrickým proudem."
-            },
-            "BB - Styk s potenciálem země": {
-                article: "ČSN 33 2000-4-41 (Obecně)",
-                explanation: "Vliv možnosti styku osob s potenciálem země, který ovlivňuje požadavky na doplňková ochranná opatření (např. v mokrých prostorech)."
-            },
-            "BC - Možnost evakuace": {
-                article: "ČSN 33 2000-4-41 / 527 (Obecně)",
-                explanation: "Zohlednění podmínek evakuace osob v případě nebezpečí, což ovlivňuje volbu a instalaci vedení, zejména v únikových cestách a shromaždištích."
-            },
-            "CA - Hořlavost stavebních hmot": {
-                article: "527 (Obecně)",
-                explanation: "Výběr a stavba vedení musí minimalizovat šíření požáru s ohledem na hořlavost stavebních hmot v objektu (např. dřevostavby)."
-            },
-            "DB - Nebezpečí výbuchu": {
-                article: "422 / 527 (Obecně)",
-                explanation: "Instalace musí být provedena tak, aby byly splněny zvláštní požadavky na ochranu v prostorách s nebezpečím výbuchu (např. zóny s výbušnou atmosférou)."
-            },
-            "DC - Nebezpečí požáru": {
-                article: "422 / 527 (Obecně)",
-                explanation: "Instalace musí být navržena a zřízena s ohledem na ochranu před vznikem a šířením požáru, včetně volby vhodných materiálů a uspořádání vedení (např. místnosti s otevřeným ohněm, sklady hořlavých látek)."
-            }
-        };
-
-
-        const wiringSystemOptions = [
-            { optgroup: "Obecné typy vedení (čl. 521)" },
-            { value: "521.4: Přípojnicové rozvody a soustavy připojnic", text: "521.4: Přípojnicové rozvody a soustavy připojnic" },
-            { value: "521.5: Obvody střídavého proudu - elektromagnetické účinky", text: "521.5: Obvody střídavého proudu - elektromagnetické účinky" },
-            { value: "521.6: Systémy instalačních trubek, kanálů, lávek a roštů", text: "521.6: Systémy instalačních trubek, kanálů, lávek a roštů" },
-            { value: "521.7: Několik obvodů v jednom kabelu", text: "521.7: Několik obvodů v jednom kabelu" },
-            { value: "521.8: Uspořádání obvodů", text: "521.8: Uspořádání obvodů" },
-            { value: "521.9: Použití ohebných kabelů a šňůr", text: "521.9: Použití ohebných kabelů a šňůr" },
-            { value: "521.10: Instalace kabelů (izolované vodiče)", text: "521.10: Instalace kabelů (izolované vodiče)" },
-            { optgroup: "Referenční způsoby uložení (Příloha A.52.3)" },
-            { value: "A1: Izol. vodiče/jednožilov. kabely v trubce v tepelně izolační stěně", text: "A1: Izol. vodiče/jednožilov. kabely v trubce v tepelně izolační stěně" },
-            { value: "A2: Vícežilové kabely v trubce v tepelně izolační stěně", text: "A2: Vícežilové kabely v trubce v tepelně izolační stěně" },
-            { value: "B1: Izol. vodiče/jednožilov. kabely v trubce na dřevěné/zděné stěně", text: "B1: Izol. vodiče/jednožilov. kabely v trubce na dřevěné/zděné stěně" },
-            { value: "B2: Vícežilové kabely v trubce na dřevěné/zděné stěně", text: "B2: Vícežilové kabely v trubce na dřevěné/zděné stěně" },
-            { value: "C: Jednožilov./vícežilov. kabely na dřevěné/zděné stěně (přímo)", text: "C: Jednožilov./vícežilov. kabely na dřevěné/zděné stěně (přímo)" },
-            { value: "D1: Vícežilov. kabely v trubkách v zemi", text: "D1: Vícežilov. kabely v trubkách v zemi" },
-            { value: "D2: Jednožilov./vícežilov. kabely přímo v zemi", text: "D2: Jednožilov./vícežilov. kabely přímo v zemi" },
-            { value: "E: Vícežilov. kabely ve volném vzduchu (od zdi >0.3 průměru)", text: "E: Vícežilov. kabely ve volném vzduchu (od zdi >0.3 průměru)" },
-            { value: "F: Jednožilov. kabely ve volném vzduchu (dotýkající se)", text: "F: Jednožilov. kabely ve volném vzduchu (dotýkající se)" },
-            { value: "G: Jednožilov. kabely ve volném vzduchu (vzdálené)", text: "G: Jednožilov. kabely ve volném vzduchu (vzdálené)" },
-            { optgroup: "Další způsoby uložení (Příloha A.52.3 - Příklady)" },
-            { value: "Položka 10,11: V zavěšených úložných kanálech", text: "Položka 10,11: V zavěšených úložných kanálech" },
-            { value: "Položka 12: V tvárnicích", text: "Položka 12: V tvárnicích" },
-            { value: "Položka 15,16: V rámech dveří/oken", text: "Položka 15,16: V rámech dveří/oken" },
-            { value: "Položka 20-23: Na dřevěné/zděné stěně, pod stropem", text: "Položka 20-23: Na dřevěné/zděné stěně, pod stropem" },
-            { value: "Položka 30-36: Na lávkách, žebřících, konzolách, izolátorech", text: "Položka 30-36: Na lávkách, žebřících, konzolách, izolátorech" },
-            { value: "Položka 40-47: Ve stavebních dutinách (trubky, kanály)", text: "Položka 40-47: Ve stavebních dutinách (trubky, kanály)" },
-            { value: "Položka 50-53: V podlaze (zapuštěné kanály)", text: "Položka 50-53: V podlaze (zapuštěné kanály)" },
-            { value: "Položka 54-56: V kabelových kanálech (větrané/nevětrané)", text: "Položka 54-56: V kabelových kanálech (větrané/nevětrané)" },
-            { value: "Položka 57-60: Přímo ve zdivu", text: "Položka 57-60: Přímo ve zdivu" },
-            { value: "Položka 70-73: Uložené v zemi", text: "Položka 70-73: Uložené v zemi" }
-        ];
-
+        const influenceDetails = { "AA - Okolní teplota": { article: "522.1", explanation: "Vedení musí být zvolena a zřízena tak, aby odpovídala všem teplotám mezi nejvyšší a nejnižší teplotou okolí v místě instalace a aby nebyly překročeny mezní teploty při normálním provozu a v případě poruchy." }, "AB - Vysoká vlhkost": { article: "522.3", explanation: "Vedení musí být zvolena a zřízena tak, aby nedošlo k žádnému poškození kondenzací vzdušné vlhkosti nebo vniknutím vody. Hotová vedení musí vyhovovat stupni ochrany IP." }, "AD - Přítomnost vody": { article: "522.3", explanation: "Vedení musí být zvolena a zřízena tak, aby nedošlo k žádnému poškození kondenzací vzdušné vlhkosti nebo vniknutím vody (např. stříkající voda, ponoření). Hotová vedení musí vyhovovat stupni ochrany IP." }, "AE - Přítomnost cizích pevných těles": { article: "522.4", explanation: "Vedení musí být zvolena a zřízena tak, aby se minimalizovalo nebezpečí od vniknutí cizích pevných těles (např. prach, úlomky). Hotová vedení musí odpovídat stupni ochrany krytem IP." }, "AF - Korozivní/znečišťující látky": { article: "522.5", explanation: "Pokud je pravděpodobná přítomnost korozivních nebo znečišťujících látek, musí být části vedení vhodně chráněny nebo vyrobeny z odolného materiálu (např. chemické výpary, solanka)." }, "AG - Ráz": { article: "522.6", explanation: "Vedení musí být zvolena a zřízena tak, aby se minimalizovalo nebezpečí od mechanického namáhání, např. rázem, úderem nebo stlačením (např. prostory s vysokozdvižnými vozíky)." }, "AH - Vibrace": { article: "522.7", explanation: "Vedení podepíraná nebo připevněná k vibrujícím zařízením musí být pro tyto podmínky vhodná, zvláště kabely a kabelové spoje (např. připojení k motorům)." }, "AJ - Ostatní mechanická namáhání": { article: "522.8", explanation: "Vedení musí být zvolena a zřízena tak, aby se zabránilo poškození kabelů a jejich zakončení během instalace, používání nebo údržby (např. tahové namáhání, ohyby, upevnění, uložení v zemi)." }, "AK - Výskyt rostlinstva nebo plísní": { article: "522.9", explanation: "V místech s prokázaným nebo předpokládaným rizikem růstu rostlinstva nebo plísní musí být vedení vhodně zvolena nebo přijata zvláštní ochranná opatření (např. uzavřené systémy)." }, "AL - Výskyt živočichů": { article: "522.10", explanation: "V místech s prokázaným nebo předpokládaným rizikem působení živočichů (např. hlodavců) musí být vedení vhodně zvolena nebo přijata zvláštní ochranná opatření (např. mechanická ochrana)." }, "AN - Sluneční záření a ultrafialové záření": { article: "522.11", explanation: "Vystavená vedení musí být pro tyto podmínky vhodného provedení nebo vybavena odpovídajícím stíněním proti slunečnímu a ultrafialovému záření." }, "AP - Seizmické účinky": { article: "522.12", explanation: "Vedení musí být zvolena a instalována s řádným ohledem na seizmická nebezpečí v místě instalace, s důrazem na upevnění a poddajnost spojení." }, "AR - Vítr": { article: "522.13", explanation: "Vlivy větru je třeba posuzovat ve spojení s vibracemi (AH) a ostatním mechanickým namáháním (AJ), které mohou způsobit poškození vedení." }, "BE - Povaha zpracovávaných nebo skladovaných látek": { article: "522.14", explanation: "Je třeba brát ohled na povahu látek, které mohou ovlivnit požární bezpečnost instalace. Viz také článek 422 (ochrana před požárem) a 527 (omezení šíření požáru)." }, "CB - Konstrukce budovy": { article: "522.15", explanation: "Vedení musí být zvolena a instalována s ohledem na možný posun konstrukce (např. dilatace) tak, aby vodiče a kabely nebyly vystaveny nadměrnému mechanickému namáhání." }, "BA - Způsobilost osob": { article: "ČSN 33 2000-4-41 (Obecně)", explanation: "Nutnost zohlednit úroveň způsobilosti osob (např. znalé, poučené, laici) při návrhu a umístění elektrických instalací pro zajištění ochrany před úrazem elektrickým proudem." }, "BB - Styk s potenciálem země": { article: "ČSN 33 2000-4-41 (Obecně)", explanation: "Vliv možnosti styku osob s potenciálem země, který ovlivňuje požadavky na doplňková ochranná opatření (např. v mokrých prostorech)." }, "BC - Možnost evakuace": { article: "ČSN 33 2000-4-41 / 527 (Obecně)", explanation: "Zohlednění podmínek evakuace osob v případě nebezpečí, což ovlivňuje volbu a instalaci vedení, zejména v únikových cestách a shromaždištích." }, "CA - Hořlavost stavebních hmot": { article: "527 (Obecně)", explanation: "Výběr a stavba vedení musí minimalizovat šíření požáru s ohledem na hořlavost stavebních hmot v objektu (např. dřevostavby)." }, "DB - Nebezpečí výbuchu": { article: "422 / 527 (Obecně)", explanation: "Instalace musí být provedena tak, aby byly splněny zvláštní požadavky na ochranu v prostorách s nebezpečím výbuchu (např. zóny s výbušnou atmosférou)." }, "DC - Nebezpečí požáru": { article: "422 / 527 (Obecně)", explanation: "Instalace musí být navržena a zřízena s ohledem na ochranu před vznikem a šířením požáru, včetně volby vhodných materiálů a uspořádání vedení (např. místnosti s otevřeným ohněm, sklady hořlavých látek)." } };
+        const wiringSystemOptions = [ { optgroup: "Obecné typy vedení (čl. 521)" }, { value: "521.4: Přípojnicové rozvody a soustavy připojnic", text: "521.4: Přípojnicové rozvody a soustavy připojnic" }, { value: "521.5: Obvody střídavého proudu - elektromagnetické účinky", text: "521.5: Obvody střídavého proudu - elektromagnetické účinky" }, { value: "521.6: Systémy instalačních trubek, kanálů, lávek a roštů", text: "521.6: Systémy instalačních trubek, kanálů, lávek a roštů" }, { value: "521.7: Několik obvodů v jednom kabelu", text: "521.7: Několik obvodů v jednom kabelu" }, { value: "521.8: Uspořádání obvodů", text: "521.8: Uspořádání obvodů" }, { value: "521.9: Použití ohebných kabelů a šňůr", text: "521.9: Použití ohebných kabelů a šňůr" }, { value: "521.10: Instalace kabelů (izolované vodiče)", text: "521.10: Instalace kabelů (izolované vodiče)" }, { optgroup: "Referenční způsoby uložení (Příloha A.52.3)" }, { value: "A1: Izol. vodiče/jednožilov. kabely v trubce v tepelně izolační stěně", text: "A1: Izol. vodiče/jednožilov. kabely v trubce v tepelně izolační stěně" }, { value: "A2: Vícežilové kabely v trubce v tepelně izolační stěně", text: "A2: Vícežilové kabely v trubce v tepelně izolační stěně" }, { value: "B1: Izol. vodiče/jednožilov. kabely v trubce na dřevěné/zděné stěně", text: "B1: Izol. vodiče/jednožilov. kabely v trubce na dřevěné/zděné stěně" }, { value: "B2: Vícežilové kabely v trubce na dřevěné/zděné stěně", text: "B2: Vícežilové kabely v trubce na dřevěné/zděné stěně" }, { value: "C: Jednožilov./vícežilov. kabely na dřevěné/zděné stěně (přímo)", text: "C: Jednožilov./vícežilov. kabely na dřevěné/zděné stěně (přímo)" }, { value: "D1: Vícežilov. kabely v trubkách v zemi", text: "D1: Vícežilov. kabely v trubkách v zemi" }, { value: "D2: Jednožilov./vícežilov. kabely přímo v zemi", text: "D2: Jednožilov./vícežilov. kabely přímo v zemi" }, { value: "E: Vícežilov. kabely ve volném vzduchu (od zdi >0.3 průměru)", text: "E: Vícežilov. kabely ve volném vzduchu (od zdi >0.3 průměru)" }, { value: "F: Jednožilov. kabely ve volném vzduchu (dotýkající se)", text: "F: Jednožilov. kabely ve volném vzduchu (dotýkající se)" }, { value: "G: Jednožilov. kabely ve volném vzduchu (vzdálené)", text: "G: Jednožilov. kabely ve volném vzduchu (vzdálené)" }, { optgroup: "Další způsoby uložení (Příloha A.52.3 - Příklady)" }, { value: "Položka 10,11: V zavěšených úložných kanálech", text: "Položka 10,11: V zavěšených úložných kanálech" }, { value: "Položka 12: V tvárnicích", text: "Položka 12: V tvárnicích" }, { value: "Položka 15,16: V rámech dveří/oken", text: "Položka 15,16: V rámech dveří/oken" }, { value: "Položka 20-23: Na dřevěné/zděné stěně, pod stropem", text: "Položka 20-23: Na dřevěné/zděné stěně, pod stropem" }, { value: "Položka 30-36: Na lávkách, žebřících, konzolách, izolátorech", text: "Položka 30-36: Na lávkách, žebřících, konzolách, izolátorech" }, { value: "Položka 40-47: Ve stavebních dutinách (trubky, kanály)", text: "Položka 40-47: Ve stavebních dutinách (trubky, kanály)" }, { value: "Položka 50-53: V podlaze (zapuštěné kanály)", text: "Položka 50-53: V podlaze (zapuštěné kanály)" }, { value: "Položka 54-56: V kabelových kanálech (větrané/nevětrané)", text: "Položka 54-56: V kabelových kanálech (větrané/nevětrané)" }, { value: "Položka 57-60: Přímo ve zdivu", text: "Položka 57-60: Přímo ve zdivu" }, { value: "Položka 70-73: Uložené v zemi", text: "Položka 70-73: Uložené v zemi" } ];
 
         /**
          * Populates the wiringSystemSelect dropdown.
          */
         function populateWiringSystemSelect() {
-            wiringSystemSelect.innerHTML = ''; // Clear existing options
+            wiringSystemSelect.innerHTML = '';
             let currentOptgroup = null;
 
             wiringSystemOptions.forEach(option => {
@@ -504,11 +364,10 @@
 
         /**
          * Generates the room input fields based on the number specified in the input.
-         * This version creates elements more explicitly for better compatibility.
          */
         function generateRoomInputs() {
             const num = parseInt(numRoomsInput.value);
-            roomsContainer.innerHTML = ''; // Clear existing rooms
+            roomsContainer.innerHTML = ''; 
 
             if (isNaN(num) || num < 1) {
                 return;
@@ -517,75 +376,32 @@
             for (let i = 0; i < num; i++) {
                 const roomDiv = document.createElement('div');
                 roomDiv.className = 'p-4 bg-gray-100 rounded-xl border border-gray-200 shadow-md';
-
-                // Room Title
-                const h3 = document.createElement('h3');
-                h3.className = 'text-xl font-semibold text-gray-800 mb-4';
-                h3.textContent = `Místnost ${i + 1}`;
-                roomDiv.appendChild(h3);
-
-                const gridDiv = document.createElement('div');
-                gridDiv.className = 'grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3';
-
-                // Room Description
-                let divDesc = document.createElement('div');
-                divDesc.className = 'flex-grow col-span-1 sm:col-span-2';
-                divDesc.innerHTML = `
-                    <label for="roomDescription${i}" class="block text-gray-700 text-sm font-medium mb-1">Popis místnosti:</label>
-                    <input type="text" id="roomDescription${i}" placeholder="Např. Obývací pokoj s krbem, Kuchyně, Technická místnost"
-                           class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-base room-description">
-                    <p class="text-xs text-gray-500 mt-1">Zadejte typ a volitelný název místnosti.</p>
-                `;
-                gridDiv.appendChild(divDesc);
-
-                // No Influences Checkbox
-                let divCheckbox = document.createElement('div');
-                divCheckbox.className = 'flex-grow col-span-1 sm:col-span-2 flex items-center mb-2';
-                divCheckbox.innerHTML = `
-                    <input type="checkbox" id="noInfluencesCheckbox${i}" class="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded no-influences-checkbox">
-                    <label for="noInfluencesCheckbox${i}" class="text-gray-700 font-medium">Explicitně označit, že nebyly zadány žádné specifické vnější vlivy.</label>
-                `;
-                gridDiv.appendChild(divCheckbox);
-
-                // Influences Selects (Dynamically created)
-                influenceCategories.forEach(category => {
-                    let divCategory = document.createElement('div');
-                    divCategory.className = 'flex-grow col-span-1 sm:col-span-2';
-
-                    let label = document.createElement('label');
-                    label.htmlFor = `${category.idPrefix}${i}`;
-                    label.className = 'block text-gray-700 text-sm font-medium mb-1';
-                    label.textContent = category.label;
-                    divCategory.appendChild(label);
-
-                    let select = document.createElement('select');
-                    select.id = `${category.idPrefix}${i}`;
-                    select.multiple = true;
-                    select.size = 5;
-                    select.className = 'w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-base influence-select max-h-32 overflow-y-auto';
-
-                    category.influences.forEach(influence => {
-                        let option = document.createElement('option');
-                        option.value = influence.value;
-                        option.textContent = influence.text;
-                        select.appendChild(option);
-                    });
-                    divCategory.appendChild(select);
-
-                    let hint = document.createElement('p');
-                    hint.className = 'text-xs text-gray-500 mt-1';
-                    hint.textContent = category.hint;
-                    divCategory.appendChild(hint);
-
-                    gridDiv.appendChild(divCategory);
-                });
-
-                roomDiv.appendChild(gridDiv);
+                roomDiv.innerHTML = `
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Místnost ${i + 1}</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+                        <div class="flex-grow col-span-1 sm:col-span-2">
+                            <label for="roomDescription${i}" class="block text-gray-700 text-sm font-medium mb-1">Popis místnosti:</label>
+                            <input type="text" id="roomDescription${i}" placeholder="Např. Obývací pokoj s krbem, Kuchyně..." class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-base room-description">
+                            <p class="text-xs text-gray-500 mt-1">Zadejte typ a volitelný název místnosti.</p>
+                        </div>
+                        <div class="flex-grow col-span-1 sm:col-span-2 flex items-center mb-2">
+                            <input type="checkbox" id="noInfluencesCheckbox${i}" class="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded no-influences-checkbox">
+                            <label for="noInfluencesCheckbox${i}" class="text-gray-700 font-medium">Explicitně označit, že nebyly zadány žádné specifické vnější vlivy.</label>
+                        </div>
+                        ${influenceCategories.map(category => `
+                            <div class="flex-grow col-span-1 sm:col-span-2">
+                                <label for="${category.idPrefix}${i}" class="block text-gray-700 text-sm font-medium mb-1">${category.label}</label>
+                                <select id="${category.idPrefix}${i}" multiple size="5" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-base influence-select max-h-32 overflow-y-auto">
+                                    ${category.influences.map(influence => `<option value="${influence.value}">${influence.text}</option>`).join('')}
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">${category.hint}</p>
+                            </div>
+                        `).join('')}
+                    </div>`;
                 roomsContainer.appendChild(roomDiv);
 
-                // Attach event listener for the checkbox after it's in the DOM
                 const checkbox = roomDiv.querySelector(`#noInfluencesCheckbox${i}`);
-                const influenceSelects = roomDiv.querySelectorAll(`.influence-select`);
+                const influenceSelects = roomDiv.querySelectorAll('.influence-select');
                 checkbox.addEventListener('change', () => {
                     influenceSelects.forEach(select => {
                         select.disabled = checkbox.checked;
@@ -603,42 +419,29 @@
             const numRooms = parseInt(numRoomsInput.value);
 
             for (let i = 0; i < numRooms; i++) {
-                const roomDescriptionEl = document.getElementById(`roomDescription${i}`);
-                const noInfluencesCheckbox = document.getElementById(`noInfluencesCheckbox${i}`);
-                
-                const roomDescription = roomDescriptionEl ? roomDescriptionEl.value.trim() : "";
-                const noInfluencesChecked = noInfluencesCheckbox ? noInfluencesCheckbox.checked : false;
-
+                const roomDescription = document.getElementById(`roomDescription${i}`).value.trim();
+                const noInfluencesChecked = document.getElementById(`noInfluencesCheckbox${i}`).checked;
                 let selectedInfluences = [];
-                if (!noInfluencesChecked) { // Only collect influences if checkbox is NOT checked
+                if (!noInfluencesChecked) {
                     influenceCategories.forEach(category => {
                         const influenceSelectEl = document.getElementById(`${category.idPrefix}${i}`);
-                        if (influenceSelectEl) {
-                            const selected = Array.from(influenceSelectEl.options)
-                                .filter(option => option.selected)
-                                .map(option => option.value);
-                            selectedInfluences = selectedInfluences.concat(selected);
-                        }
+                        const selected = Array.from(influenceSelectEl.options)
+                            .filter(option => option.selected)
+                            .map(option => option.value);
+                        selectedInfluences.push(...selected);
                     });
                 }
-                
-                roomsData.push({
-                    description: roomDescription,
-                    noInfluencesChecked: noInfluencesChecked,
-                    selectedInfluences: selectedInfluences // Empty array if checkbox checked
-                });
+                roomsData.push({ description: roomDescription, noInfluencesChecked, selectedInfluences });
             }
-
             const selectedWiringSystems = Array.from(wiringSystemSelect.selectedOptions).map(option => option.value);
-
             return {
                 date: dateInput.value,
                 preparedBy: preparedByInput.value.trim(),
                 client: clientInput.value.trim(),
                 buildingHeader: buildingHeaderInput.value.trim(),
-                selectedWiringSystems: selectedWiringSystems,
+                selectedWiringSystems,
                 additionalNotes: additionalNotesInput.value.trim(),
-                numRooms: numRooms,
+                numRooms,
                 rooms: roomsData
             };
         }
@@ -650,85 +453,62 @@
             clientInput.value = data.client || '';
             buildingHeaderInput.value = data.buildingHeader || '';
             additionalNotesInput.value = data.additionalNotes || '';
-
-            // Update generated protocol name after loading header data
             updateProtocolNameInput();
 
-            // Reset wiringSystemSelect first
             Array.from(wiringSystemSelect.options).forEach(option => option.selected = false);
             if (data.selectedWiringSystems) {
-                data.selectedWiringSystems.forEach(selectedVal => {
-                    const option = Array.from(wiringSystemSelect.options).find(opt => opt.value === selectedVal);
-                    if (option) {
-                        option.selected = true;
-                    }
+                data.selectedWiringSystems.forEach(val => {
+                    const option = Array.from(wiringSystemSelect.options).find(opt => opt.value === val);
+                    if (option) option.selected = true;
                 });
             }
-
-            // Populate rooms dynamically (this calls generateRoomInputs)
             numRoomsInput.value = data.numRooms || 1;
             generateRoomInputs(); 
-
-            // Now fill in the details for each room using a small delay for DOM rendering
             setTimeout(() => {
                 data.rooms.forEach((roomData, i) => {
-                    const roomDescriptionEl = document.getElementById(`roomDescription${i}`);
-                    const noInfluencesCheckbox = document.getElementById(`noInfluencesCheckbox${i}`);
-
-                    if (roomDescriptionEl) {
-                        roomDescriptionEl.value = roomData.description || '';
-                    }
-
-                    if (noInfluencesCheckbox) {
-                        noInfluencesCheckbox.checked = roomData.noInfluencesChecked || false;
-                        // Trigger change event to disable/enable dropdowns
-                        const event = new Event('change');
-                        noInfluencesCheckbox.dispatchEvent(event);
-                    }
+                    document.getElementById(`roomDescription${i}`).value = roomData.description || '';
+                    const checkbox = document.getElementById(`noInfluencesCheckbox${i}`);
+                    checkbox.checked = roomData.noInfluencesChecked || false;
+                    checkbox.dispatchEvent(new Event('change'));
 
                     if (roomData.selectedInfluences && !roomData.noInfluencesChecked) {
                         influenceCategories.forEach(category => {
-                            const influenceSelectEl = document.getElementById(`${category.idPrefix}${i}`);
-                            if (influenceSelectEl) {
-                                Array.from(influenceSelectEl.options).forEach(option => {
-                                    option.selected = roomData.selectedInfluences.includes(option.value);
-                                });
-                            }
+                            const selectEl = document.getElementById(`${category.idPrefix}${i}`);
+                            Array.from(selectEl.options).forEach(option => {
+                                option.selected = roomData.selectedInfluences.includes(option.value);
+                            });
                         });
                     }
                 });
                 storageMessage.textContent = "Protokol načten úspěšně!";
                 storageMessage.style.color = 'green';
-            }, 50); // Small delay
+                storageMessage.classList.remove('hidden');
+            }, 50);
         }
-
 
         /**
          * Saves the current protocol data to Firestore.
          */
         async function saveProtocol() {
             if (!db || !userId) {
-                storageMessage.textContent = "Chyba: Databáze není inicializována nebo uživatel není přihlášen.";
+                storageMessage.textContent = "Chyba: Databáze není připravena.";
                 storageMessage.style.color = 'red';
                 return;
             }
             const protocolName = protocolNameInput.value.trim();
             if (!protocolName) {
-                storageMessage.textContent = "Název protokolu je prázdný. Vyplňte prosím datum a/nebo název objektu.";
+                storageMessage.textContent = "Název protokolu je prázdný. Vyplňte datum/objekt.";
                 storageMessage.style.color = 'red';
                 return;
             }
-
             const protocolData = collectFormData();
             try {
-                // Path: /artifacts/{appId}/users/{userId}/protocols/{protocolName}
                 const protocolDocRef = doc(db, `artifacts/${appId}/users/${userId}/protocols`, protocolName);
                 await setDoc(protocolDocRef, protocolData);
-                storageMessage.textContent = `Protokol "${protocolName}" uložen úspěšně!`;
+                storageMessage.textContent = `Protokol "${protocolName}" uložen.`;
                 storageMessage.style.color = 'green';
             } catch (e) {
-                console.error("Error saving document: ", e);
-                storageMessage.textContent = `Chyba při ukládání protokolu "${protocolName}": ${e.message}`;
+                storageMessage.textContent = `Chyba při ukládání: ${e.message}`;
                 storageMessage.style.color = 'red';
             }
         }
@@ -738,32 +518,24 @@
          */
         async function loadProtocol() {
             if (!db || !userId) {
-                storageMessage.textContent = "Chyba: Databáze není inicializována nebo uživatel není přihlášen.";
+                storageMessage.textContent = "Chyba: Databáze není připravena.";
                 storageMessage.style.color = 'red';
                 return;
             }
-            const protocolName = protocolNameInput.value.trim();
-            if (!protocolName) {
-                storageMessage.textContent = "Název protokolu je prázdný. Vyplňte prosím datum a/nebo název objektu pro načtení.";
-                storageMessage.style.color = 'red';
-                return;
-            }
+            const protocolName = prompt("Zadejte název protokolu k načtení:", protocolNameInput.value.trim());
+            if (!protocolName) return;
 
             try {
                 const protocolDocRef = doc(db, `artifacts/${appId}/users/${userId}/protocols`, protocolName);
                 const docSnap = await getDoc(protocolDocRef);
-
                 if (docSnap.exists()) {
-                    const loadedData = docSnap.data();
-                    populateFormWithData(loadedData);
+                    populateFormWithData(docSnap.data());
                 } else {
-                    storageMessage.textContent = `Protokol "${protocolName}" nebyl nalezen.`;
+                    storageMessage.textContent = `Protokol "${protocolName}" nenalezen.`;
                     storageMessage.style.color = 'orange';
-                    console.log("No such document!");
                 }
             } catch (e) {
-                console.error("Error loading document: ", e);
-                storageMessage.textContent = `Chyba při načítání protokolu "${protocolName}": ${e.message}`;
+                storageMessage.textContent = `Chyba při načítání: ${e.message}`;
                 storageMessage.style.color = 'red';
             }
         }
@@ -774,32 +546,12 @@
         function updateProtocolNameInput() {
             const dateVal = dateInput.value;
             const buildingNameVal = buildingHeaderInput.value.trim();
-
-            let formattedDate = '';
-            if (dateVal) {
-                formattedDate = dateVal.replace(/-/g, ''); // Remove dashes from date (YYYYMMDD)
-            }
-
-            // Sanitize building name: replace non-alphanumeric with underscore, remove leading/trailing underscores
-            const sanitizedBuildingName = buildingNameVal
-                .replace(/[^a-zA-Z0-9ěščřžýáíéóúůĚŠČŘŽÝÁÍÉÓÚŮ]+/g, '_') // Replace non-alphanumeric with underscore
-                .replace(/^_+|_+$/g, ''); // Remove leading/trailing underscores
-
-            let generatedName = '';
-            if (formattedDate && sanitizedBuildingName) {
-                generatedName = `${formattedDate}_${sanitizedBuildingName}`;
-            } else if (formattedDate) {
-                generatedName = formattedDate;
-            } else if (sanitizedBuildingName) {
-                generatedName = sanitizedBuildingName;
-            } else {
-                generatedName = ''; // Or some default like 'Novy_protokol'
-            }
+            let formattedDate = dateVal ? dateVal.replace(/-/g, '') : '';
+            const sanitizedBuildingName = buildingNameVal.replace(/[^a-zA-Z0-9ěščřžýáíéóúů]+/g, '_').replace(/^_+|_+$/g, '');
+            let generatedName = [formattedDate, sanitizedBuildingName].filter(Boolean).join('_');
             protocolNameInput.value = generatedName;
-            
-            // Show message about auto-generation if name is generated
             if (generatedName) {
-                 storageMessage.textContent = "Název protokolu je generován automaticky z data a názvu objektu.";
+                 storageMessage.textContent = "Název protokolu je generován automaticky.";
                  storageMessage.style.color = 'gray';
                  storageMessage.classList.remove('hidden');
             } else {
@@ -807,201 +559,110 @@
             }
         }
 
+        // NEW FUNCTION: Handles going back to the form
+        /**
+         * Hides protocol output and shows the input form.
+         */
+        function goBackToForm() {
+            protocolOutputContainer.classList.add('hidden');
+            inputUI.classList.remove('hidden');
+            window.scrollTo(0, 0); // Scroll to top
+        }
 
         /**
          * Generates the protocol HTML and plain text output.
          */
         function generateProtocol() {
-            const data = collectFormData(); // Use the new collectFormData function
-
+            const data = collectFormData();
             let protocolHtml = "";
             let plainTextForCopy = "";
             const roomsExplicitlyMarkedNoInfluences = [];
-            const allSelectedUniqueInfluences = new Set(); // To store unique influences for explanation section
-            const generatedProtocolNumber = protocolNameInput.value; // Get the generated protocol name/number
+            const allSelectedUniqueInfluences = new Set();
+            const generatedProtocolNumber = protocolNameInput.value;
 
-            // --- Main Protocol Title (first in HTML and Plain Text) ---
-            protocolHtml += `
-                <h2 class="text-xl font-bold text-gray-800 my-4 text-center">
-                    PROTOKOL O URČENÍ VNĚJŠÍCH VLIVŮ<br>
-                    dle ČSN 33 2000-5-52 ed.2
-                </h2>
-            `;
-            plainTextForCopy += "PROTOKOL O URČENÍ VNĚJŠÍCH VLIVŮ\n";
-            plainTextForCopy += "dle ČSN 33 2000-5-52 ed.2\n\n";
+            // --- Main Protocol Title ---
+            protocolHtml += `<h2 class="text-xl font-bold text-gray-800 my-4 text-center">PROTOKOL O URČENÍ VNĚJŠÍCH VLIVŮ<br>dle ČSN 33 2000-5-52 ed.2</h2>`;
+            plainTextForCopy += "PROTOKOL O URČENÍ VNĚJŠÍCH VLIVŮ\ndle ČSN 33 2000-5-52 ed.2\n\n";
 
-            // --- Build Header Details Section (HTML and Plain Text) ---
-            // Combine Datum vypracování and Číslo protokolu on one line
-            protocolHtml += `<div style="display: flex; justify-content: space-between; align-items: flex-start;">`;
-            plainTextForCopy += ``;
+            // --- Header Details ---
+            let headerHtml = '<div style="display: flex; justify-content: space-between; align-items: flex-start;">';
+            let plainTextDate = data.date ? `Datum vypracování: ${data.date}` : '';
+            let plainTextNum = generatedProtocolNumber ? `Číslo protokolu: ${generatedProtocolNumber}` : '';
+            headerHtml += `<p><strong>Datum vypracování:</strong> ${data.date || 'Nezadáno'}</p>`;
+            headerHtml += `<p><strong>Číslo protokolu:</strong> ${generatedProtocolNumber || 'Nezadáno'}</p></div>`;
+            plainTextForCopy += `${plainTextDate}${' '.repeat(Math.max(1, 80 - plainTextDate.length - plainTextNum.length))}${plainTextNum}\n`;
+            if (data.preparedBy) { headerHtml += `<p><strong>Vypracoval:</strong> ${data.preparedBy}</p>`; plainTextForCopy += `Vypracoval: ${data.preparedBy}\n`; }
+            if (data.client) { headerHtml += `<p><strong>Zadavatel:</strong> ${data.client}</p>`; plainTextForCopy += `Zadavatel: ${data.client}\n`; }
+            if (data.buildingHeader) { headerHtml += `<p><strong>Objekt:</strong> ${data.buildingHeader}</p>`; plainTextForCopy += `Objekt: ${data.buildingHeader}\n`; }
+            if (data.selectedWiringSystems.length > 0) { headerHtml += `<p><strong>Popis typů vedení a uložení:</strong><br>${data.selectedWiringSystems.join(', ')}</p>`; plainTextForCopy += `\nPopis typů vedení a uložení:\n${data.selectedWiringSystems.join(', ')}\n`; }
+            if (data.additionalNotes) { headerHtml += `<p><strong>Doplňující poznámky:</strong><br>${data.additionalNotes.replace(/\n/g, '<br>')}</p>`; plainTextForCopy += `\nDoplňující poznámky:\n${data.additionalNotes}\n`; }
+            protocolHtml += headerHtml;
 
-            if (data.date) {
-                protocolHtml += `<p><strong>Datum vypracování:</strong> ${data.date}</p>`;
-                plainTextForCopy += `Datum vypracování: ${data.date}`;
-            }
-            if (generatedProtocolNumber) {
-                protocolHtml += `<p><strong>Číslo protokolu:</strong> ${generatedProtocolNumber}</p>`;
-                // Pad with spaces for plain text alignment (approximate)
-                const dateLen = data.date ? `Datum vypracování: ${data.date}`.length : 0;
-                const protocolNumString = `Číslo protokolu: ${generatedProtocolNumber}`;
-                const totalLen = 80; // Approximate line length for plain text
-                const padding = Math.max(1, totalLen - dateLen - protocolNumString.length);
-                plainTextForCopy += ' '.repeat(padding) + protocolNumString + '\n';
-            } else if (data.date) {
-                plainTextForCopy += '\n'; // Add newline if only date exists
-            }
+            protocolHtml += `<p class="mt-4">---</p>`;
+            plainTextForCopy += "\n---\n\n";
 
-
-            protocolHtml += `</div>`; // Close flex container for date/protocol number
-
-            if (data.preparedBy) {
-                protocolHtml += `<p><strong>Vypracoval:</strong> ${data.preparedBy}</p>`;
-                plainTextForCopy += `Vypracoval: ${data.preparedBy}\n`;
-            }
-            if (data.client) {
-                protocolHtml += `<p><strong>Zadavatel:</strong> ${data.client}</p>`;
-                plainTextForCopy += `Zadavatel: ${data.client}\n`;
-            }
-            if (data.buildingHeader) {
-                protocolHtml += `<p><strong>Objekt:</strong> ${data.buildingHeader}</p>`;
-                plainTextForCopy += `Objekt: ${data.buildingHeader}\n`;
-            }
-            if (data.selectedWiringSystems && data.selectedWiringSystems.length > 0) {
-                protocolHtml += `<p><strong>Popis použitých typů vedení a způsobů uložení (dle čl. 521 a příl. A.52.3):</strong><br>${data.selectedWiringSystems.join(', ').replace(/\n/g, '<br>')}</p>`;
-                plainTextForCopy += `\nPopis použitých typů vedení a způsobů uložení (dle čl. 521 a příl. A.52.3):\n${data.selectedWiringSystems.join(', ')}\n`;
-            }
-            if (data.additionalNotes) {
-                protocolHtml += `<p><strong>Doplňující poznámky a shoda s dalšími požadavky normy:</strong><br>${data.additionalNotes.replace(/\n/g, '<br>')}</p>`;
-                plainTextForCopy += `\nDoplňující poznámky a shoda s dalšími požadavky normy:\n${data.additionalNotes}\n`;
-            }
-
-            protocolHtml += `<p class="mt-4">---</p>`; // Separator for HTML
-            plainTextForCopy += "\n---\n\n"; // Separator for plain text
-
+            // --- Rooms Table ---
             if (isNaN(data.numRooms) || data.numRooms < 1) {
-                protocolHtml += `<p>Žádné místnosti nebyly zadány. Zadejte prosím počet místností.</p>`;
-                plainTextForCopy += "Žádné místnosti nebyly zadány. Zadejte prosím počet místností.\n";
+                protocolHtml += `<p>Nebyly zadány žádné místnosti.</p>`;
+                plainTextForCopy += "Nebyly zadány žádné místnosti.\n";
             } else {
-                // --- Start Table HTML ---
-                protocolHtml += `
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Číslo</th>
-                                <th>Popis místnosti</th>
-                                <th>Vnější vlivy</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-
+                protocolHtml += `<table><thead><tr><th>Číslo</th><th>Popis místnosti</th><th>Vnější vlivy</th></tr></thead><tbody>`;
                 data.rooms.forEach((roomData, i) => {
-                    let influencesOutput = '';
-                    if (roomData.selectedInfluences && roomData.selectedInfluences.length > 0) {
-                        influencesOutput = roomData.selectedInfluences.join(', ');
-                        roomData.selectedInfluences.forEach(inf => allSelectedUniqueInfluences.add(inf)); // Collect for explanation
-                    } else {
-                        influencesOutput = "Pro tuto místnost nebyly zadány žádné specifické vnější vlivy.";
-                        if (roomData.noInfluencesChecked) {
-                            roomsExplicitlyMarkedNoInfluences.push(roomData.description);
-                        }
-                    }
-
-                    // --- Add Row to Table HTML ---
-                    protocolHtml += `
-                        <tr>
-                            <td>${i + 1}.</td>
-                            <td>${roomData.description || 'Nezadáno'}</td>
-                            <td>${influencesOutput}</td>
-                        </tr>
-                    `;
-
-                    // --- Add to Plain Text for Copy ---
-                    plainTextForCopy += `${i + 1}. Popis místnosti: ${roomData.description || 'Nezadáno'}\n`;
-                    plainTextForCopy += `   Vnější vlivy: ${influencesOutput}\n\n`;
+                    let influencesOutput = roomData.selectedInfluences.length > 0 
+                        ? roomData.selectedInfluences.join(', ')
+                        : "Nebyly zadány žádné specifické vnější vlivy.";
+                    if (roomData.selectedInfluences.length > 0) roomData.selectedInfluences.forEach(inf => allSelectedUniqueInfluences.add(inf));
+                    if (roomData.noInfluencesChecked) roomsExplicitlyMarkedNoInfluences.push(roomData.description);
+                    
+                    protocolHtml += `<tr><td>${i + 1}.</td><td>${roomData.description || 'Nezadáno'}</td><td>${influencesOutput}</td></tr>`;
+                    plainTextForCopy += `${i + 1}. Popis: ${roomData.description || 'Nezadáno'}\n   Vlivy: ${influencesOutput}\n\n`;
                 });
-
-                // --- Close Table HTML ---
                 protocolHtml += `</tbody></table>`;
-
-                // Add summary for rooms with EXPLICITLY CHECKED "no specific influences"
-                if (roomsExplicitlyMarkedNoInfluences.length > 0) {
-                    protocolHtml += `<p class="mt-4">---</p><p><strong>Souhrn místností, pro které bylo explicitně uvedeno, že nebyly zadány žádné specifické vnější vlivy:</strong></p><ul>`;
-                    plainTextForCopy += "\n---\n\nSouhrn místností, pro které bylo explicitně uvedeno, že nebyly zadány žádné specifické vnější vlivy:\n";
-
-                    roomsExplicitlyMarkedNoInfluences.forEach((room) => {
-                        protocolHtml += `<li>- ${room}</li>`;
-                        plainTextForCopy += `- ${room}\n`;
-                    });
-                    protocolHtml += `</ul><p class="mt-2 text-sm text-gray-700 leading-relaxed">`;
-                    plainTextForCopy += "\n";
-
-                    // Add the explanatory text from the user
-                    const normExplanation = `V souladu s normou. ČSN 33 2000-5-51 (která je základní pro určování vnějších vlivů, na níž ČSN 33 2000-5-52 navazuje) připouští několik způsobů, jak vnější vlivy v protokolu uvádět. Jedna z variant je uvést pouze vlivy, které nejsou považovány za normální nebo se v daném prostoru vyskytují, a ostatní (ty, které se nevyskytují nebo jsou "normální") shrnout. Když se u místnosti ukáže "Vnější vlivy: Nezadáno", v podstatě tím říká, že pro danou místnost nebyly vybrány žádné specifické (a tedy potenciálně abnormální) vnější vlivy z nabízených kategorií. To je implicitní vyjádření, že buď vlivy z těchto kategorií nejsou přítomny, nebo spadají pod "normální" podmínky, které není nutné explicitně jmenovat.`;
-                    protocolHtml += normExplanation;
-                    plainTextForCopy += normExplanation + "\n";
-                    protocolHtml += `</p>`;
-                }
             }
 
-            // --- Signature Section ---
-            protocolHtml += `
-                <div class="mt-8 pt-4 border-t border-gray-300 text-center">
-                    <p class="mb-4">_________________________</p>
-                    <p>Podpis</p>
-                </div>
-            `;
-            plainTextForCopy += "\n\n_________________________\n";
-            plainTextForCopy += "Podpis\n";
-
-            // --- Explanations of Selected Influences ---
+            // --- Signature & Explanations ---
             if (allSelectedUniqueInfluences.size > 0) {
-                protocolHtml += `
-                    <div class="mt-8 pt-4 border-t border-gray-300">
-                        <h3 class="text-lg font-bold text-gray-800 mb-3 text-center">Vysvětlivky k vybraným vnějším vlivům dle ČSN 33 2000-5-52 ed.2:</h3>
-                        <ul class="list-disc ml-6 text-sm">
-                `;
-                plainTextForCopy += "\n\n--- VYSVĚTLIVKY K VYBRANÝM VNĚJŠÍM VLIVŮM DLE ČSN 33 2000-5-52 ed.2 ---\n";
-
-                allSelectedUniqueInfluences.forEach(influenceKey => {
-                    const detail = influenceDetails[influenceKey];
+                protocolHtml += `<div class="mt-8 pt-4 border-t border-gray-300"><h3 class="text-lg font-bold text-gray-800 mb-3 text-center">Vysvětlivky k vnějším vlivům</h3><ul class="list-disc ml-6 text-sm">`;
+                plainTextForCopy += "\n--- VYSVĚTLIVKY K VNĚJŠÍM VLIVŮM ---\n";
+                allSelectedUniqueInfluences.forEach(key => {
+                    const detail = influenceDetails[key];
                     if (detail) {
-                        protocolHtml += `<li><strong>${influenceKey}</strong> (Článek ${detail.article}): ${detail.explanation}</li>`;
-                        plainTextForCopy += `- ${influenceKey} (Článek ${detail.article}): ${detail.explanation}\n`;
+                        protocolHtml += `<li><strong>${key}</strong> (Čl. ${detail.article}): ${detail.explanation}</li>`;
+                        plainTextForCopy += `- ${key} (Čl. ${detail.article}): ${detail.explanation}\n`;
                     }
                 });
                 protocolHtml += `</ul></div>`;
             }
-
-
-            // Update the display container with generated HTML
-            protocolOutputContainer.innerHTML = protocolHtml; // Set the generated content
-            protocolOutputHtmlContent = protocolOutputContainer.innerHTML; // Store HTML for copying
-            protocolOutputPlainContent = plainTextForCopy; // Store plain text for copying
+            protocolHtml += `<div class="mt-8 pt-4 border-t border-gray-300 text-center"><p class="mb-4">_________________________</p><p>Podpis</p></div>`;
+            plainTextForCopy += "\n\n_________________________\nPodpis\n";
             
-            // Add Print and Copy buttons below the protocol (re-rendered each time)
-            protocolOutputContainer.innerHTML += `
-                <div class="flex flex-col sm:flex-row justify-center gap-4 mt-8 no-print-element">
-                    <button id="printProtocol"
-                            class="bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-5 rounded-lg shadow-md transform transition duration-300 ease-in-out hover:scale-105 text-base w-full sm:w-auto">
-                        Tisk protokolu (do PDF)
+            // Store content for copying
+            protocolOutputHtmlContent = protocolHtml;
+            protocolOutputPlainContent = plainTextForCopy;
+            
+            // --- Final output rendering with action buttons ---
+            protocolOutputContainer.innerHTML = protocolHtml + `
+                <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8 no-print-element">
+                    <button id="backToFormBtn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-5 rounded-lg shadow-md transform transition duration-300 ease-in-out hover:scale-105 text-base w-full sm:w-auto">
+                        Zpět na vyplňování
                     </button>
-                    <button id="copyToClipboard"
-                            class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-5 rounded-lg shadow-md transform transition duration-300 ease-in-out hover:scale-105 text-base w-full sm:w-auto">
-                        Kopírovat do schránky (pro Word)
+                    <button id="printProtocol" class="bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-5 rounded-lg shadow-md transform transition duration-300 ease-in-out hover:scale-105 text-base w-full sm:w-auto">
+                        Tisk protokolu (PDF)
                     </button>
-                </div>
-            `;
-
+                    <button id="copyToClipboard" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-5 rounded-lg shadow-md transform transition duration-300 ease-in-out hover:scale-105 text-base w-full sm:w-auto">
+                        Kopírovat (pro Word)
+                    </button>
+                </div>`;
 
             // Re-attach event listeners for newly rendered buttons
+            document.getElementById('backToFormBtn').addEventListener('click', goBackToForm);
             document.getElementById('copyToClipboard').addEventListener('click', copyHtmlToClipboard);
             document.getElementById('printProtocol').addEventListener('click', () => window.print());
 
-            // Show output and hide input
+            // Switch views
             inputUI.classList.add('hidden');
             protocolOutputContainer.classList.remove('hidden');
-            copyMessage.classList.add('hidden'); // Hide copy message on new generation
+            copyMessage.classList.add('hidden');
         }
 
         /**
@@ -1012,51 +673,33 @@
             preparedByInput.value = '';
             clientInput.value = '';
             buildingHeaderInput.value = '';
-            protocolNameInput.value = ''; // Clear protocol name
-            storageMessage.textContent = ''; // Clear storage message
-            // Reset selected options for wiringSystemSelect
-            Array.from(wiringSystemSelect.options).forEach(option => option.selected = false);
             additionalNotesInput.value = '';
+            Array.from(wiringSystemSelect.options).forEach(option => option.selected = false);
             numRoomsInput.value = 1;
-            roomsContainer.innerHTML = ''; // Clear rooms HTML
-            generateRoomInputs(); // Re-generate default rooms structure
+            generateRoomInputs();
             protocolOutputContainer.innerHTML = '';
-            protocolOutputHtmlContent = '';
-            protocolOutputPlainContent = '';
             protocolOutputContainer.classList.add('hidden');
             copyMessage.classList.add('hidden');
-            inputUI.classList.remove('hidden'); // Ensure input section is visible on reset
+            inputUI.classList.remove('hidden');
+            updateProtocolNameInput();
         }
 
         /**
-         * Copies the generated HTML table and plain text to the clipboard.
+         * Copies generated content to the clipboard.
          */
         async function copyHtmlToClipboard() {
-            const htmlString = protocolOutputHtmlContent;
-            const plainText = protocolOutputPlainContent;
-
-            if (!htmlString || !plainText) {
-                console.error("No content to copy.");
-                return;
-            }
-
+            if (!protocolOutputHtmlContent || !protocolOutputPlainContent) return;
             try {
-                const htmlBlob = new Blob([htmlString], { type: 'text/html' });
-                const textBlob = new Blob([plainText], { type: 'text/plain' });
-                const clipboardItem = new ClipboardItem({
-                    'text/html': htmlBlob,
-                    'text/plain': textBlob
-                });
-                await navigator.clipboard.write([clipboardItem]);
-
+                await navigator.clipboard.write([new ClipboardItem({
+                    'text/html': new Blob([protocolOutputHtmlContent], { type: 'text/html' }),
+                    'text/plain': new Blob([protocolOutputPlainContent], { type: 'text/plain' })
+                })]);
+                copyMessage.textContent = "Protokol zkopírován do schránky!";
                 copyMessage.classList.remove('hidden');
-                setTimeout(() => {
-                    copyMessage.classList.add('hidden');
-                }, 3000);
-
+                setTimeout(() => copyMessage.classList.add('hidden'), 3000);
             } catch (err) {
-                console.warn('Failed to copy HTML using Clipboard API, falling back to plain text:', err);
-                fallbackCopyToClipboard(plainText);
+                console.warn('Fallback to plain text copy', err);
+                fallbackCopyToClipboard(protocolOutputPlainContent);
             }
         }
 
@@ -1069,39 +712,41 @@
             textarea.select();
             try {
                 document.execCommand('copy');
+                copyMessage.textContent = "Protokol zkopírován (jako text)!";
                 copyMessage.classList.remove('hidden');
-                setTimeout(() => {
-                    copyMessage.classList.add('hidden');
-                }, 3000);
+                setTimeout(() => copyMessage.classList.add('hidden'), 3000);
             } catch (err) {
-                console.error('Failed to copy text using execCommand: ', err);
+                console.error('Fallback copy failed: ', err);
             } finally {
                 document.body.removeChild(textarea);
             }
         }
 
-        // Event Listeners
+        // --- Event Listeners ---
         numRoomsInput.addEventListener('input', generateRoomInputs);
         generateProtocolBtn.addEventListener('click', generateProtocol);
         resetAppBtn.addEventListener('click', resetApplication);
         saveProtocolBtn.addEventListener('click', saveProtocol);
-        loadProtocolBtn.addEventListener('click', loadProtocol);
-        dateInput.addEventListener('input', updateProtocolNameInput); // Listen for date changes
-        buildingHeaderInput.addEventListener('input', updateProtocolNameInput); // Listen for building header changes
+        loadProtocolBtn.addEventListener('click', () => {
+             // Simplified load prompt for better UX
+            const currentName = protocolNameInput.value.trim();
+            const protocolNameToLoad = prompt("Zadejte název protokolu k načtení:", currentName);
+            if (protocolNameToLoad) {
+                // Manually set the name input to what the user wants to load, then trigger load
+                protocolNameInput.value = protocolNameToLoad; 
+                loadProtocol();
+            }
+        });
+        dateInput.addEventListener('input', updateProtocolNameInput);
+        buildingHeaderInput.addEventListener('input', updateProtocolNameInput);
 
-        // Initial generation of room inputs and populate wiring system select on load
+        // --- Initial Setup ---
         document.addEventListener('DOMContentLoaded', () => {
             const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            dateInput.value = `${year}-${month}-${day}`;
-
+            dateInput.value = today.toISOString().split('T')[0];
             populateWiringSystemSelect();
-            generateRoomInputs(); // This will create the initial set of room input fields
-            updateProtocolNameInput(); // Initial call to set the protocol name
-            
-            // Initialize Firebase if config is available (for save/load functions)
+            generateRoomInputs();
+            updateProtocolNameInput();
             initializeFirebase();
         });
     </script>
