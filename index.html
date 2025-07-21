@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generátor protokolu VV dle ČSN 33 2000-5-52 ed.2</title>
+    <title>Generátor protokolu VV dle ČSN 33 2000-5-51 ed.3</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -21,11 +21,6 @@
         .no-scrollbar {
             -ms-overflow-style: none;  /* IE and Edge */
             scrollbar-width: none;  /* Firefox */
-        }
-        /* Styling for multiple select options */
-        select[multiple] {
-            min-height: 8rem; /* Enough height to show multiple options without too much scroll */
-            width: 100%;
         }
         /* Specific font for protocol output */
         #protocolOutputContainer {
@@ -57,7 +52,7 @@
                 padding: 0;
             }
             /* Hide the entire input UI section when printing */
-            #inputUI {
+            #inputUI, #loadProtocolModal {
                 display: none !important;
             }
             /* Ensure the protocol output is visible when printing */
@@ -89,15 +84,38 @@
                 padding: 0.5cm !important;
             }
         }
+
+        /* Modal specific styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
     </style>
 </head>
 <body class="p-4 sm:p-6 md:p-8 flex items-center justify-center min-h-screen">
     <div class="bg-white p-6 sm:p-8 md:p-10 rounded-xl shadow-2xl w-full max-w-4xl border border-gray-200">
-        <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-6 text-center">Generátor protokolu VV dle ČSN 33 2000-5-52 ed.2</h1>
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-6 text-center">Generátor protokolu VV dle ČSN 33 2000-5-51 ed.3</h1>
 
         <div id="inputUI"> <!-- This section contains all form elements and will be hidden/shown dynamically -->
             <p class="text-gray-600 text-base mb-6 text-center">
-                Tato aplikace vám pomůže generovat protokol místností včetně detailních vnějších vlivů dle normy ČSN 33 2000-5-52.
+                Tato aplikace vám pomůže generovat protokol místností včetně detailních vnějších vlivů dle normy ČSN 33 2000-5-51 ed.3.
                 Pro výběr více možností v rozbalovacích seznamech podržte klávesu <span class="font-bold text-gray-800">Ctrl</span> (nebo <span class="font-bold text-gray-800">Cmd</span> na Macu) a klikněte na ně.
             </p>
 
@@ -125,24 +143,54 @@
                            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg shadow-sm">
                 </div>
                 <div>
+                    <label for="commissionChairman" class="block text-gray-700 text-lg font-semibold mb-2">Předseda komise:</label>
+                    <input type="text" id="commissionChairman" placeholder="Např. Ing. Petr Svoboda"
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg shadow-sm">
+                </div>
+                <div>
+                    <label for="commissionMembers" class="block text-gray-700 text-lg font-semibold mb-2">Členové komise (oddělte čárkou):</label>
+                    <input type="text" id="commissionMembers" placeholder="Např. Jan Dvořák, Eva Kučerová"
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg shadow-sm">
+                </div>
+                <div>
+                    <label for="underlyingDocumentation" class="block text-gray-700 text-lg font-semibold mb-2">Podkladová dokumentace (oddělte odrážkami):</label>
+                    <textarea id="underlyingDocumentation" rows="3" placeholder="- Stavební dokumentace&#10;- Bezpečnostní listy používaných látek&#10;- Výchozí / Pravidelná revize elektro"
+                              class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg shadow-sm resize-y"></textarea>
+                </div>
+                <div>
+                    <label for="technicalRegulations" class="block text-gray-700 text-lg font-semibold mb-2">Použité technické předpisy a normy (oddělte odrážkami):</label>
+                    <textarea id="technicalRegulations" rows="3" placeholder="- ČSN 332000-5-51 ed.3 +Z1 + Z2 (7:2022)&#10;- TNI 332000-5-51 (10:2022)&#10;- ČSN 332000-4-41 ed.3"
+                              class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg shadow-sm resize-y"></textarea>
+                </div>
+                <div>
                     <label for="wiringSystemSelect" class="block text-gray-700 text-lg font-semibold mb-2">
                         Popis použitých typů vedení a způsobů uložení (dle čl. 521 a příl. A.52.3) - vícenásobný výběr (Ctrl/Cmd + klik):
                     </label>
                     <select id="wiringSystemSelect" multiple size="8"
-                              class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg shadow-sm resize-y"></select>
+                                  class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg shadow-sm resize-y"></select>
                     <p class="text-xs text-gray-500 mt-1">
                         Vyberte relevantní typy vedení a referenční způsoby uložení z normy.
                     </p>
                 </div>
                 <div>
                     <label for="additionalNotes" class="block text-gray-700 text-lg font-semibold mb-2">
-                        Doplňující poznámky a shoda s dalšími požadavky normy (např. úbytek napětí, ochrana před nadproudy, požární bezpečnost):
+                        Doplňující poznámky a obecná shoda s dalšími požadavky normy (např. úbytek napětí, ochrana před nadproudy, požární bezpečnost):
                     </label>
                     <textarea id="additionalNotes" rows="4" placeholder="Např. Úbytek napětí nepřesahuje normou dovolené hodnoty dle čl. 525. Ochrana před nadproudy řešena dle ČSN 33 2000-4-43. Zajištěna požární bezpečnost dle čl. 527."
-                              class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg shadow-sm resize-y"></textarea>
+                                  class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg shadow-sm resize-y"></textarea>
                     <p class="text-xs text-gray-500 mt-1">
                         Zde můžete uvést obecná prohlášení o shodě s dalšími relevantními částmi normy ČSN 33 2000 (např. 4-41, 4-42, 5-54 atd.).
                     </p>
+                </div>
+                <div>
+                    <label for="revisionTerms" class="block text-gray-700 text-lg font-semibold mb-2">Stanovení termínů pravidelných revizí:</label>
+                    <textarea id="revisionTerms" rows="4" placeholder="Např. Základní nejdelší lhůty pravidelných revizí vyhrazeného elektrického zařízení včetně zařízení pro ochranu před účinky atmosférické a statické elektřiny dle přílohy č. 4 NV č. 190/2022 Sb.&#10;LPS: Prostory - mimo kritické systémy: 4 roky"
+                              class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg shadow-sm resize-y"></textarea>
+                </div>
+                <div>
+                    <label for="commissionDecision" class="block text-gray-700 text-lg font-semibold mb-2">Rozhodnutí komise:</label>
+                    <textarea id="commissionDecision" rows="2" placeholder="Např. Komise rozhodla o určení vnějších vlivů, tak jsou uvedeny v tomto protokolu."
+                              class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg shadow-sm resize-y"></textarea>
                 </div>
             </div>
 
@@ -192,6 +240,20 @@
             </div>
         </div> <!-- End of inputUI -->
 
+        <!-- Modal pro načtení protokolu -->
+        <div id="loadProtocolModal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <h3 class="text-xl font-bold mb-4">Načíst protokol</h3>
+                <label for="loadProtocolNameInput" class="block text-gray-700 text-sm font-medium mb-2">Zadejte název protokolu:</label>
+                <input type="text" id="loadProtocolNameInput" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-base mb-4">
+                <div class="flex justify-center gap-4">
+                    <button id="confirmLoadProtocolBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Načíst</button>
+                    <button id="cancelLoadProtocolBtn" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg">Zrušit</button>
+                </div>
+                <p id="loadModalMessage" class="text-center mt-2 text-sm font-medium hidden"></p>
+            </div>
+        </div>
+
         <!-- Výsledek protokolu (hidden by default) -->
         <div id="protocolOutputContainer" class="mt-8 hidden">
             <!-- Protocol content will be generated here -->
@@ -206,8 +268,8 @@
     <script type="module">
         // Firebase imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase setup variables (provided by Canvas environment)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -229,6 +291,12 @@
         const preparedByInput = document.getElementById('preparedByInput');
         const clientInput = document.getElementById('clientInput');
         const buildingHeaderInput = document.getElementById('buildingHeader');
+        const commissionChairmanInput = document.getElementById('commissionChairman'); 
+        const commissionMembersInput = document.getElementById('commissionMembers');   
+        const underlyingDocumentationInput = document.getElementById('underlyingDocumentation'); 
+        const technicalRegulationsInput = document.getElementById('technicalRegulations'); 
+        const revisionTermsInput = document.getElementById('revisionTerms'); 
+        const commissionDecisionInput = document.getElementById('commissionDecision'); 
         const wiringSystemSelect = document.getElementById('wiringSystemSelect');
         const additionalNotesInput = document.getElementById('additionalNotes');
         const protocolNameInput = document.getElementById('protocolNameInput');
@@ -242,6 +310,13 @@
         const protocolOutputContainer = document.getElementById('protocolOutputContainer');
         const inputUI = document.getElementById('inputUI');
         const copyMessage = document.getElementById('copyMessage');
+
+        // Modal elements
+        const loadProtocolModal = document.getElementById('loadProtocolModal');
+        const loadProtocolNameInput = document.getElementById('loadProtocolNameInput');
+        const confirmLoadProtocolBtn = document.getElementById('confirmLoadProtocolBtn');
+        const cancelLoadProtocolBtn = document.getElementById('cancelLoadProtocolBtn');
+        const loadModalMessage = document.getElementById('loadModalMessage');
         
         // Variables to hold protocol content for copying
         let protocolOutputHtmlContent = '';
@@ -289,53 +364,517 @@
             }
         }
 
-        // Predefined data (influences, wiring systems, etc.)
-        const influenceCategories = [
+        // Detailed influence data from ČSN 33 2000-5-51 ed.3 (Table ZA.1 and ZA.1N)
+        // isNormal indicates if the influence code is considered "normal" by default in the context of the sample protocol.
+        // opatreniRef links to the `technicalMeasures` object for detailed explanations.
+        // ipSolid and ipWater are added for IP rating calculation based on ČSN EN 60529
+        const detailedInfluences = {
+            "AA1": { category: "AA", description: "Okolní teplota: -60°C až +5°C", article: "ZA.1", isNormal: false, opatreniRef: "AA_AB_Opatreni" },
+            "AA2": { category: "AA", description: "Okolní teplota: -40°C až +5°C", article: "ZA.1", isNormal: false, opatreniRef: "AA_AB_Opatreni" },
+            "AA3": { category: "AA", description: "Okolní teplota: -25°C až +5°C", article: "ZA.1", isNormal: false, opatreniRef: "AA_AB_Opatreni" },
+            "AA4": { category: "AA", description: "Okolní teplota: -5°C až +40°C", article: "ZA.1", isNormal: true },
+            "AA5": { category: "AA", description: "Okolní teplota: +5°C až +40°C", article: "ZA.1", isNormal: true }, 
+            "AA6": { category: "AA", description: "Okolní teplota: +5°C až +60°C", article: "ZA.1", isNormal: false, opatreniRef: "AA_AB_Opatreni" },
+            "AA7": { category: "AA", description: "Okolní teplota: -25°C až +55°C", article: "ZA.1", isNormal: false, opatreniRef: "AA_AB_Opatreni" },
+            "AA8": { category: "AA", description: "Okolní teplota: -50°C až +40°C", article: "ZA.1", isNormal: false, opatreniRef: "AA_AB_Opatreni" },
+
+            "AB1": { category: "AB", description: "Vlhkost: -60°C až +5°C, 3%-100% RH", article: "ZA.1", isNormal: false, opatreniRef: "AA_AB_Opatreni" },
+            "AB2": { category: "AB", description: "Vlhkost: -40°C až +5°C, 0.1%-100% RH", article: "ZA.1", isNormal: false, opatreniRef: "AA_AB_Opatreni" },
+            "AB3": { category: "AB", description: "Vlhkost: -25°C až +5°C, 0.5%-100% RH", article: "ZA.1", isNormal: false, opatreniRef: "AA_AB_Opatreni" },
+            "AB4": { category: "AB", description: "Vlhkost: -5°C až +40°C, 5%-95% RH", article: "ZA.1", isNormal: true },
+            "AB5": { category: "AB", description: "Vlhkost: +5°C až +40°C, 5%-85% RH", article: "ZA.1", isNormal: true }, 
+            "AB6": { category: "AB", description: "Vlhkost: +5°C až +60°C, 10%-100% RH", article: "ZA.1", isNormal: false, opatreniRef: "AA_AB_Opatreni" },
+            "AB7": { category: "AB", description: "Vlhkost: -25°C až +55°C, 10%-100% RH", article: "ZA.1", isNormal: false, opatreniRef: "AA_AB_Opatreni" },
+            "AB8": { category: "AB", description: "Vlhkost: -50°C až +40°C, 10%-100% RH", article: "ZA.1", isNormal: false, opatreniRef: "AA_AB_Opatreni" },
+
+            "AC1": { category: "AC", description: "Nadmořská výška: ≤ 2000 m", article: "ZA.1", isNormal: true },
+            "AC2": { category: "AC", description: "Nadmořská výška: > 2000 m", article: "ZA.1", isNormal: false, opatreniRef: "AC_Opatreni" },
+
+            "AD1": { category: "AD", description: "Voda: Zanedbatelná", article: "ZA.1", isNormal: true, ipWater: 0 },
+            "AD2": { category: "AD", description: "Voda: Možnost padajících kapek", article: "ZA.1", isNormal: false, opatreniRef: "AD_Opatreni_Voda", ipWater: 2 }, 
+            "AD3": { category: "AD", description: "Voda: Vodní tříšť", article: "ZA.1", isNormal: false, opatreniRef: "AD_Opatreni_Voda", ipWater: 3 },
+            "AD4": { category: "AD", description: "Voda: Stříkající voda", article: "ZA.1", isNormal: false, opatreniRef: "AD_Opatreni_Strikajici", ipWater: 4 }, 
+            "AD5": { category: "AD", description: "Voda: Tryskající voda", article: "ZA.1", isNormal: false, opatreniRef: "AD_Opatreni_Voda", ipWater: 5 },
+            "AD6": { category: "AD", description: "Voda: Vlny", article: "ZA.1", isNormal: false, opatreniRef: "AD_Opatreni_Voda", ipWater: 6 },
+            "AD7": { category: "AD", description: "Voda: Mělké ponoření", article: "ZA.1", isNormal: false, opatreniRef: "AD_Opatreni_Voda", ipWater: 7 },
+            "AD8": { category: "AD", description: "Voda: Hluboké ponoření", article: "ZA.1", isNormal: false, opatreniRef: "AD_Opatreni_Voda", ipWater: 8 },
+
+            "AE1": { category: "AE", description: "Cizí pevná tělesa: Zanedbatelná", article: "ZA.1", isNormal: true, ipSolid: 0 },
+            "AE2": { category: "AE", description: "Cizí pevná tělesa: Malé předměty (2,5 mm)", article: "ZA.1", isNormal: false, opatreniRef: "AE_Opatreni", ipSolid: 3 },
+            "AE3": { category: "AE", description: "Cizí pevná tělesa: Velmi malé předměty (1 mm)", article: "ZA.1", isNormal: false, opatreniRef: "AE_Opatreni", ipSolid: 4 },
+            "AE4": { category: "AE", description: "Cizí pevná tělesa: Lehká prašnost", article: "ZA.1", isNormal: false, opatreniRef: "AE_Opatreni", ipSolid: 5 },
+            "AE5": { category: "AE", description: "Cizí pevná tělesa: Střední prašnost", article: "ZA.1", isNormal: false, opatreniRef: "AE_Opatreni", ipSolid: 6 }, 
+            "AE6": { category: "AE", description: "Cizí pevná tělesa: Silná prašnost", article: "ZA.1", isNormal: false, opatreniRef: "AE_Opatreni", ipSolid: 6 },
+
+            "AF1": { category: "AF", description: "Koroze/znečištění: Zanedbatelná", article: "ZA.1", isNormal: true },
+            "AF2": { category: "AF", description: "Koroze/znečištění: Atmosférický", article: "ZA.1", isNormal: false, opatreniRef: "AF_Opatreni" },
+            "AF3": { category: "AF", description: "Koroze/znečištění: Občasný či příležitostný", article: "ZA.1", isNormal: false, opatreniRef: "AF_Opatreni" },
+            "AF4": { category: "AF", description: "Koroze/znečištění: Trvalý", article: "ZA.1", isNormal: false, opatreniRef: "AF_Opatreni" },
+
+            "AG1": { category: "AG", description: "Ráz: Mírný", article: "ZA.1", isNormal: true },
+            "AG2": { category: "AG", description: "Ráz: Střední", article: "ZA.1", isNormal: false, opatreniRef: "AG_AH_AJ_Opatreni" },
+            "AG3": { category: "AG", description: "Ráz: Silný", article: "ZA.1", isNormal: false, opatreniRef: "AG_AH_AJ_Opatreni" },
+
+            "AH1": { category: "AH", description: "Vibrace: Mírné", article: "ZA.1", isNormal: true },
+            "AH2": { category: "AH", description: "Vibrace: Střední", article: "ZA.1", isNormal: false, opatreniRef: "AG_AH_AJ_Opatreni" },
+            "AH3": { category: "AH", description: "Vibrace: Silné", article: "ZA.1", isNormal: false, opatreniRef: "AG_AH_AJ_Opatreni" },
+
+            "AJ": { category: "AJ", description: "Ostatní mechanická namáhání", article: "522.8", isNormal: false, opatreniRef: "AG_AH_AJ_Opatreni" }, 
+
+            "AK1": { category: "AK", description: "Rostlinstvo/plísně: Bez nebezpečí", article: "ZA.1", isNormal: true },
+            "AK2": { category: "AK", description: "Rostlinstvo/plísně: Nebezpečný", article: "ZA.1", isNormal: false, opatreniRef: "AK_AL_Opatreni" },
+
+            "AL1": { category: "AL", description: "Živočichové: Bez nebezpečí", article: "ZA.1", isNormal: true },
+            "AL2": { category: "AL", description: "Živočichové: Nebezpečný", article: "ZA.1", isNormal: false, opatreniRef: "AK_AL_Opatreni" },
+
+            // AM - Elektromagnetická, elektrostatická nebo ionizující působení
+            "AM1-1": { category: "AM", description: "Harmonické, meziharmonické: Kontrolovaná úroveň", article: "ZA.1", isNormal: true },
+            "AM1-2": { category: "AM", description: "Harmonické, meziharmonické: Normální úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM1-3": { category: "AM", description: "Harmonické, meziharmonické: Vysoká úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+
+            "AM2-1": { category: "AM", description: "Signální napětí: Kontrolovaná úroveň", article: "ZA.1", isNormal: true },
+            "AM2-2": { category: "AM", description: "Signální napětí: Střední úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM2-3": { category: "AM", description: "Signální napětí: Vysoká úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+
+            "AM3-1": { category: "AM", description: "Změny amplitudy napětí: Kontrolovaná úroveň", article: "ZA.1", isNormal: true },
+            "AM3-2": { category: "AM", description: "Změny amplitudy napětí: Normální úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+
+            "AM4": { category: "AM", description: "Neustálené napětí", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM5": { category: "AM", description: "Změny kmitočtu", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM6": { category: "AM", description: "Indukované napětí nízkého kmitočtu", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM7": { category: "AM", description: "Stejnosměrný proud v obvodech střídavého proudu", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM8-1": { category: "AM", description: "Vyzařovaná magnetická pole: Střední úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM8-2": { category: "AM", description: "Vyzařovaná magnetická pole: Vysoká úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM9-1": { category: "AM", description: "Elektrická pole: Zanedbatelná úroveň", article: "ZA.1", isNormal: true },
+            "AM9-2": { category: "AM", description: "Elektrická pole: Střední úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM9-3": { category: "AM", description: "Elektrická pole: Vysoká úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM9-4": { category: "AM", description: "Elektrická pole: Velmi vysoká úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM21": { category: "AM", description: "Indukované oscilující napětí nebo proudy", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM22-1": { category: "AM", description: "Šířené vedením, jednosměrně vedené v časovém měřítku nanosekund: Zanedbatelná úroveň", article: "ZA.1", isNormal: true },
+            "AM22-2": { category: "AM", description: "Šířené vedením, jednosměrně vedené v časovém měřítku nanosekund: Střední úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM22-3": { category: "AM", description: "Šířené vedením, jednosměrně vedené v časovém měřítku nanosekund: Vysoká úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM22-4": { category: "AM", description: "Šířené vedením, jednosměrně vedené v časovém měřítku nanosekund: Velmi vysoká úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM23-1": { category: "AM", description: "Šířené vedením, jednosměrně vedené v časovém měřítku milisekund nebo mikrosekund: Kontrolovaná úroveň", article: "ZA.1", isNormal: true },
+            "AM23-2": { category: "AM", description: "Šířené vedením, jednosměrně vedené v časovém měřítku milisekund nebo mikrosekund: Střední úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM23-3": { category: "AM", description: "Šířené vedením, jednosměrně vedené v časovém měřítku milisekund nebo mikrosekund: Vysoká úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM24-1": { category: "AM", description: "Oscilační přechodové jevy šířené vedením: Střední úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM24-2": { category: "AM", description: "Oscilační přechodové jevy šířené vedením: Vysoká úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM25-1": { category: "AM", description: "Jevy vyzařované s vysokým kmitočtem: Zanedbatelná úroveň", article: "ZA.1", isNormal: true },
+            "AM25-2": { category: "AM", description: "Jevy vyzařované s vysokým kmitočtem: Střední úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM25-3": { category: "AM", description: "Jevy vyzařované s vysokým kmitočtem: Vysoká úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM31-1": { category: "AM", description: "Elektrostatické výboje: Nízká úroveň", article: "ZA.1", isNormal: true },
+            "AM31-2": { category: "AM", description: "Elektrostatické výboje: Střední úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM31-3": { category: "AM", description: "Elektrostatické výboje: Vysoká úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM31-4": { category: "AM", description: "Elektrostatické výboje: Velmi vysoká úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM41-1": { category: "AM", description: "Ionizace", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+
+            "AN1": { category: "AN", description: "Sluneční záření: Nízká", article: "ZA.1", isNormal: true },
+            "AN2": { category: "AN", description: "Sluneční záření: Střední úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AN_Opatreni" },
+            "AN3": { category: "AN", description: "Sluneční záření: Vysoká úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AN_Opatreni" },
+
+            "AP1": { category: "AP", description: "Seizmické účinky: Normální (Zanedbatelné zrychlení ≤30 Gal)", article: "ZA.1", isNormal: true },
+            "AP2": { category: "AP", description: "Seizmické účinky: Nízké ohrožení (30 Gal < zrychlení ≤300 Gal)", article: "ZA.1", isNormal: false, opatreniRef: "AP_Opatreni" },
+            "AP3": { category: "AP", description: "Seizmické účinky: Střední ohrožení (300 Gal < zrychlení ≤600 Gal)", article: "ZA.1", isNormal: false, opatreniRef: "AP_Opatreni" },
+            "AP4": { category: "AP", description: "Seizmické účinky: Vysoké ohrožení (600 Gal < zrychlení)", article: "ZA.1", isNormal: false, opatreniRef: "AP_Opatreni" },
+
+            "AQ1": { category: "AQ", description: "Blesková úroveň: Zanedbatelná (Ng≤2, Nk≤25 bouřkových dní)", article: "ZA.1", isNormal: true },
+            "AQ2": { category: "AQ", description: "Blesková úroveň: Nepřímé ohrožení (Ng>2.5, Nk>25 bouřkových dní)", article: "ZA.1", isNormal: false, opatreniRef: "AQ_Opatreni" },
+            "AQ3": { category: "AQ", description: "Blesková úroveň: Přímé ohrožení", article: "ZA.1", isNormal: false, opatreniRef: "AQ_Opatreni" },
+
+            "AR1": { category: "AR", description: "Pohyb vzduchu: Pomalý (Rychlost ≤1 m/s)", article: "ZA.1", isNormal: true },
+            "AR2": { category: "AR", description: "Pohyb vzduchu: Střední (1 m/s < rychlost ≤5 m/s)", article: "ZA.1", isNormal: false, opatreniRef: "AR_AS_Opatreni" },
+            "AR3": { category: "AR", description: "Pohyb vzduchu: Silný (5 m/s < rychlost ≤10 m/s)", article: "ZA.1", isNormal: false, opatreniRef: "AR_AS_Opatreni" },
+
+            "AS1": { category: "AS", description: "Vítr: Malý (Rychlost ≤20 m/s)", article: "ZA.1", isNormal: true },
+            "AS2": { category: "AS", description: "Vítr: Střední (20 m/s < rychlost ≤30 m/s)", article: "ZA.1", isNormal: false, opatreniRef: "AR_AS_Opatreni" },
+            "AS3": { category: "AS", description: "Vítr: Silný (30 m/s < rychlost ≤50 m/s)", article: "ZA.1", isNormal: false, opatreniRef: "AR_AS_Opatreni" },
+
+            // B - Využití (Usage)
+            "BA1": { category: "BA", description: "Způsobilost osob: Běžná (Nepoučené osoby - laici)", article: "ZA.1", isNormal: true },
+            "BA2": { category: "BA", description: "Způsobilost osob: Děti", article: "ZA.1", isNormal: false, opatreniRef: "BA_Opatreni_Obecne" },
+            "BA3": { category: "BA", description: "Způsobilost osob: Osoby se zdravotním postižením", article: "ZA.1", isNormal: false, opatreniRef: "BA_Opatreni_Obecne" },
+            "BA4": { category: "BA", description: "Způsobilost osob: Poučené osoby", article: "ZA.1", isNormal: false, opatreniRef: "BA_Opatreni_Poucene" }, 
+            "BA5": { category: "BA", description: "Způsobilost osob: Osoby znalé", article: "ZA.1", isNormal: false, opatreniRef: "BA_Opatreni_Obecne" },
+
+            "BB": { category: "BB", description: "Elektrický odpor lidského těla (připravuje se)", article: "ZA.1", isNormal: true }, 
+
+            "BC1": { category: "BC", description: "Styk s potenciálem země: Žádný (Osoby v nevodivém prostředí)", article: "ZA.1", isNormal: true },
+            "BC2": { category: "BC", description: "Styk s potenciálem země: Výjimečný", article: "ZA.1", isNormal: true }, 
+            "BC3": { category: "BC", description: "Styk s potenciálem země: Častý", article: "ZA.1", isNormal: false, opatreniRef: "BC_Opatreni" }, 
+            "BC4": { category: "BC", description: "Styk s potenciálem země: Trvalý", article: "ZA.1", isNormal: false, opatreniRef: "BC_Opatreni" },
+
+            "BD1": { category: "BD", description: "Možnost evakuace: Malá hustota/snadný únik", article: "ZA.1", isNormal: true },
+            "BD2": { category: "BD", description: "Možnost evakuace: Malá hustota/obtížný únik", article: "ZA.1", isNormal: false, opatreniRef: "BD_Opatreni" },
+            "BD3": { category: "BD", description: "Možnost evakuace: Velká hustota/snadný únik", article: "ZA.1", isNormal: false, opatreniRef: "BD_Opatreni" },
+            "BD4": { category: "BD", description: "Možnost evakuace: Velká hustota/obtížný únik", article: "ZA.1", isNormal: false, opatreniRef: "BD_Opatreni" },
+
+            "BE1": { category: "BE", description: "Povaha látek: Bez významného nebezpečí", article: "ZA.1", isNormal: true },
+            "BE2": { category: "BE", description: "Povaha látek: Nebezpečí požáru (obecné)", article: "ZA.1", isNormal: false, opatreniRef: "BE_Pozar_Opatreni_Obecne" },
+            "BE3": { category: "BE", description: "Povaha látek: Nebezpečí výbuchu (obecné)", article: "ZA.1", isNormal: false, opatreniRef: "BE_Vybuch_Opatreni_Obecne" },
+            "BE4": { category: "BE", description: "Povaha látek: Nebezpečí kontaminace", article: "ZA.1", isNormal: false, opatreniRef: "BE_Kontaminace_Opatreni" },
+
+            // Specific BE_N codes from ZA.1N in the standard and sample protocol
+            "BE2N1": { category: "BE", description: "Nebezpečí požáru hořlavých hmot", article: "ZA.1N", isNormal: false, opatreniRef: "BE_Pozar_Hmoty" },
+            "BE2N2": { category: "BE", description: "Nebezpečí hořlavých prachů", article: "ZA.1N", isNormal: false, opatreniRef: "BE_Pozar_Prachy" },
+            "BE2N3": { category: "BE", description: "Nebezpečí požáru hořlavých kapalin", article: "ZA.1N", isNormal: false, opatreniRef: "BE_Pozar_Kvapaliny" },
+            "BE3N1": { category: "BE", description: "Nebezpečí výbuchu hořlavých prachů", article: "ZA.1N", isNormal: false, opatreniRef: "BE_Vybuch_Prachy" },
+            "BE3N2": { category: "BE", description: "Nebezpečí výbuchu hořlavých plynů a par", article: "ZA.1N", isNormal: false, opatreniRef: "BE_Vybuch_Plyn" },
+            "BE3N3": { category: "BE", description: "Nebezpečí výbuchu výbušnin", article: "ZA.1N", isNormal: false, opatreniRef: "BE_Vybuch_Vybussniny" },
+
+            // C - Konstrukce budovy (Building Construction)
+            "CA1": { category: "CA", description: "Stavební materiál: Nehořlavé", article: "ZA.1", isNormal: true },
+            "CA2": { category: "CA", description: "Stavební materiál: Hořlavé", article: "ZA.1", isNormal: false, opatreniRef: "CA_Opatreni" },
+
+            "CB1": { category: "CB", description: "Provedení budovy: Zanedbatelné nebezpečí", article: "ZA.1", isNormal: true },
+            "CB2": { category: "CB", description: "Provedení budovy: Šíření požáru", article: "ZA.1", isNormal: false, opatreniRef: "CB_Opatreni_Sir_Pozaru" },
+            "CB3": { category: "CB", description: "Provedení budovy: Posun", article: "ZA.1", isNormal: false, opatreniRef: "CB_Opatreni_Posun" },
+            "CB4": { category: "CB", description: "Provedení budovy: Poddajné nebo nestabilní", article: "ZA.1", isNormal: false, opatreniRef: "CB_Opatreni_Poddajne" },
+        };
+
+        // Technical Measures (Opatření) - G. Technická opatření
+        // These texts are taken directly from the sample PDF, "G. Technická opatření" section.
+        const technicalMeasures = {
+            "BC_Opatreni": "1. Dotyk s potenciálem země (BC3):\nV případě častého a trvalého nebezpečí dotyku osob s potenciálem země je nutné provozovatelem zabezpečit, aby v případě provozu nemohlo dojít k situaci, že se osoby dostanou mezi dva různé potenciály, to znamená, že všechny vodivé (neživé) konstrukce musí být navzájem pospojovány (doplňkové a hlavní ochranné pospojování).",
+            "BA_Opatreni_Poucene": "2. Osoby poučené (BA4):\nOsoby poučené pracující samostatně, popřípadě pod dohledem či dozorem osob znalých dle NV 194/2022 Sb. Jedná se o práci v elektrotechnických pracovních prostorech.\nPoučení zabezpečuje provozovatel (zaměstnavatel) v souladu s požadavky zákona 250/2021 Sb. a NV 194/2022 Sb.",
+            "AD_Opatreni_Strikajici": "3. Stříkající voda (AD4):\nMožnost stříkání vody z libovolného směru. Elektrické zařízení musí odolávat působení vody, jíž je vystaveno. Instalované elektrické předměty musí odpovídat stupni ochrany krytem alespoň IPX4.",
+            "BE_Pozar_Kvapaliny": "4. Nebezpečí požáru hořlavých kapalin (BE2N3):\nElektrická zařízení musí být provedena tak, aby za svého předepsaného provozního stavu nemohla zapálit přítomné hořlavé kapaliny. Povrchové teploty elektrických zařízení nesmějí být vyšší než 120°C. Elektrické stroje a přístroje musí mít ochranu krytem alespoň IP43. Elektrické stroje a přístroje za provozu jiskřící (vypínače, jističe, komutátorové motory, atd.) musí být chráněny polohou nebo zvláštním krytem před politím nebo postřikem hořlavou kapalinou, nebo musí být provedeny se stupněm ochrany krytem alespoň IP54, popřípadě v nevýbušném závěru Exd IIB T4 v souladu s ČSN EN 60079. Svítidla, která by mohla být hořlavými kapalinami polita, musí být se stupněm ochrany krytem alespoň IP54, nebo v nevýbušném provedení Exd IIB T4 v souladu s ČSN EN 60079. Ostatní svítidla musí mít stupeň ochrany krytem alespoň IP43, nad těmito prostory alespoň IP22 (ČSN 33 2000-5-51 ed.3, tabulka ZA.1N).",
+            "BE_Pozar_Prachy": "5. Nebezpečí požáru hořlavých prachů (BE2N2):\nPodmínky pro elektrická zařízení s hořlavým prachem jsou určeny v ČSN EN 60079-14 ed.4.",
+            "BE_Vybuch_Prachy": "6. Nebezpečí výbuchu hořlavých prachů (BE3N1):", 
+            "BE_Vybuch_Plyn": "6. Nebezpečí výbuchu hořlavých par a plynů (BE3N2):\nVýroba nebo skladování výbušných látek, včetně výskytu výbušného prachu. Předpisy pro elektrická zařízení určená k použití ve výbušné atmosféře jsou určeny v ČSN EN 60079-14 ed.4.",
+            "AD_Opatreni_Voda": "7. Možnost padajících kapek (AD2), Tryskající voda (AD5):\nElektrické zařízení musí odolávat působení vody či jiné nehořlavé kapaliny, již je vystaveno. Umisťování hlavních rozváděčů v prostředí AD je zakázáno, pokud jejich umísťování v tomto prostředí pro specifické užití nepovoluje jiný elektrotechnický předpis. Podružné rozváděče se musí vždy umisťovat tak, aby ani rozváděče, ani jejich Přednostně se mají používat nástěnné rozváděče se stupněm ochrany krytem alespoň IPX2 (AD2) a IPX5 (AD5) nebo vyšším, z nevodivého, korozně odolného materiálu.",
+            "AF_Opatreni": "8. Výskyt korosivních nebo znečišťujících látek (AF2 Atmosférický, AF3 Občasný či příležitostný):\nPřítomnost korozivních znečišťujících látek je významný. Instalace nebo zařízení na břehu moře, v blízkosti průmyslových oblastí produkujících větší množství nečistot v atmosféře, jako jsou chemičky, cementárny. Tento typ znečištění vzniká produkcí brusných, nebo vodivých či nevodivých prachů. Občasné nebo příležitostné vystavení korozivním nebo znečišťujícím chemickým látkám při výrobě a užití těchto látek. Místa, kde se zachází s malými množstvími chemických produktů a kde tyto produkty mohou náhodně přijít do styku s elektrickým zařízením; tyto podmínky se mohou vyskytnout v laboratořích továren a jiných laboratořích a místech, ve kterých se užívají uhlovodíky (v garážích, v kotelnách a podobně). Ochrana proti korozi podle specifikace pro zařízení.",
+            "AA_AB_Opatreni": "10. Atmosférické podmínky (AB6 až AB8):\nKovové konstrukční materiály, pokud nejsou korozně odolné, musí mít vhodnou povrchovou ochranu. Minimální stupeň ochrany krytem elektrických strojů, přístrojů, svítidel a rozváděčů musí být alespoň IP 21. Rozváděče musí být chráněny proti kapající vodě (stříškou, zapuštěním do zdi a podobně) a tam, kde by mohly být zasaženy stříkající vodou, musí mít stupeň ochrany krytem odpovídající třídě vnějšího vlivu, nebo chráněny dodatečnou ochranou.",
+            "AG_AH_AJ_Opatreni": "11. Mechanické namáhání - rázy a vibrace (AG2, AH2):\nPři navrhování a stavbě elektrických zařízení se musí přihlédnout k výskytu, druhu a intenzitě otřesů (vibrací, chvění, nárazů atd.) působících na elektrická zařízení nebo na jejich podklady. Je nutno volit takové provedení, umístění a zejména uložení elektrických zařízení, aby vliv otřesů nemohl narušit správnou a spolehlivou funkci a bezpečnost zařízení. Elektrická zařízení musí mít konstrukci dostatečně odolnou proti vyskytujícím se otřesům. Vedení je nutno ukládat tak, aby otřesy nezpůsobovaly přídavné namáhání vodičů, zejména jader ve spojích. Doporučuje se používat vodiče se slaněnými měděnými jádry. Tuhé vodiče (pasy) se musí opatřit pružnými spojkami. Všechny šroubové spoje (např. šroubové svorky, upevňovací šrouby vík rámů apod.) musí být zajištěny proti samovolnému uvolnění, např. vhodnou podložkou (pérovou, pojistnou vějířovou, ozubenou, se závlačkou, apod.), nebo musí být opatřeny dvěma maticemi, nebo u menších velikostí spojů (do M4) zakápnutím matice barvou. Způsob zajištění je třeba volit podle druhu a velkosti zařízení. V důležitých případech se spoj ověřuje odpovídající zkouškou. Světelné zdroje musí být otřesu vzdorné. Zářivková svítidla musí mít objímky zajištěné proti samovolnému uvolnění. Svítidla se mají zavěšovat na pružné závěsy.",
+            // Placeholder for other potential measures not explicitly listed in the sample's G section but implied by the ZA.1N table.
+            "AC_Opatreni": "Zvláštní bezpečnostní opatření pro nadmořskou výšku (např. součinitelé s ohledem na nadmořskou výšku).",
+            "AE_Opatreni": "Ochrana proti vniknutí cizích pevných těles (odpovídající stupeň ochrany krytem IP).",
+            "AK_AL_Opatreni": "Ochrana proti pronikání hmyzu a drobných živočichů a biologicko-chemickým vlivům (min. IP44, hladké povrchy, ocelové trubky v utěsněné soustavě).",
+            "AM_Opatreni": "Zvláštní opatření pro elektromagnetickou kompatibilitu (např. filtry, stínění, separace, odolnost zařízení).",
+            "AN_Opatreni": "Vhodná opatření proti slunečnímu a ultrafialovému záření (materiály odolné proti UV, stínění, speciální nátěry).",
+            "AP_Opatreni": "Instalace s řádným ohledem na seizmická nebezpečí (důraz na upevnění a poddajnost spojení).",
+            "AQ_Opatreni": "Pokud je ochrana před bleskem důležitá, provede se v souladu se souborem EN 62305.",
+            "AR_AS_Opatreni": "Opatření proti poškození vedení vlivem větru a pohybu vzduchu (posuzovat ve spojení s vibracemi a mechanickým namáháním).",
+            "BA_Opatreni_Obecne": "Zajištění elektrického zařízení proti nebezpečnému dotyku a omezení povrchové teploty na přístupných částech elektrického zařízení dle způsobilosti osob.",
+            "BD_Opatreni": "Zohlednění podmínek evakuace osob v případě nebezpečí, což ovlivňuje volbu a instalaci vedení, zejména v únikových cestách a shromaždištích.",
+            "BE_Pozar_Opatreni_Obecne": "Zařízení je vyrobeno z materiálu, který zpomaluje šíření plamene. Provedou se takové úpravy, že podstatné oteplení nebo jiskra v elektrickém zařízení nemohou způsobit požár.",
+            "BE_Vybuch_Opatreni_Obecne": "Instalace musí být provedena tak, aby byly splněny zvláštní požadavky na ochranu v prostorách s nebezpečím výbuchu (dle souboru EN 60079).",
+            "CA_Opatreni": "Pro elektrická zařízení umístěná na hořlavých podkladech a v nich platí ČSN 33 2312 a ČSN 33 2000-4-482.",
+            "CB_Opatreni_Sir_Pozaru": "Zařízení je vyrobené z materiálu, který zpomaluje šíření požáru. Požární přepážky.",
+            "CB_Opatreni_Posun": "Vedení musí být zvolena a instalována s ohledem na možný posun konstrukce (např. dilatace) tak, aby vodiče a kabely nebyly vystaveny nadměrnému mechanickému namáhání.",
+            "CB_Opatreni_Poddajne": "Instalace, které mají být konstrukčně samonosné. Použití ohebných vedení."
+        };
+
+
+        // Predefined data (influence categories for dropdowns)
+        const influenceCategoriesForDropdowns = [
             {
-                label: "Atmosférické a mechanické vlivy:",
-                idPrefix: "atmMech",
-                hint: "Vlivy související s teplotou, vlhkostí, vodou, pevnými tělesy, rázy, vibracemi a ostatním mechanickým namáháním.",
+                label: "AA - Okolní teplota",
+                categoryCode: "AA",
                 influences: [
-                    { value: "AA - Okolní teplota", text: "AA - Okolní teplota" },
-                    { value: "AB - Vysoká vlhkost", text: "AB - Vysoká vlhkost" },
-                    { value: "AD - Přítomnost vody", text: "AD - Přítomnost vody" },
-                    { value: "AE - Přítomnost cizích pevných těles", text: "AE - Přítomnost cizích pevných těles" },
-                    { value: "AG - Ráz", text: "AG - Ráz" },
-                    { value: "AH - Vibrace", text: "AH - Vibrace" },
-                    { value: "AJ - Ostatní mechanická namáhání", text: "AJ - Ostatní mechanická namáhání" }
+                    { value: "AA1", text: "AA1: -60°C až +5°C" },
+                    { value: "AA2", text: "AA2: -40°C až +5°C" },
+                    { value: "AA3", text: "AA3: -25°C až +5°C" },
+                    { value: "AA4", text: "AA4: -5°C až +40°C (Normální)" },
+                    { value: "AA5", text: "AA5: +5°C až +40°C (Normální)" },
+                    { value: "AA6", text: "AA6: +5°C až +60°C" },
+                    { value: "AA7", text: "AA7: -25°C až +55°C" },
+                    { value: "AA8", text: "AA8: -50°C až +40°C" },
                 ]
             },
             {
-                label: "Chemické, biologické a další vlivy prostředí:",
-                idPrefix: "chemBioOther",
-                hint: "Vlivy korozivních/znečišťujících látek, rostlinstva/plísní, živočichů, slunečního záření, seizmických účinků a větru.",
+                label: "AB - Vlhkost",
+                categoryCode: "AB",
                 influences: [
-                    { value: "AF - Korozivní/znečišťující látky", text: "AF - Korozivní/znečišťující látky" },
-                    { value: "AK - Výskyt rostlinstva nebo plísní", text: "AK - Výskyt rostlinstva nebo plísní" },
-                    { value: "AL - Výskyt živočichů", text: "AL - Výskyt živočichů" },
-                    { value: "AN - Sluneční záření a ultrafialové záření", text: "AN - Sluneční záření a ultrafialové záření" },
-                    { value: "AP - Seizmické účinky", text: "AP - Seizmické účinky" },
-                    { value: "AR - Vítr", text: "AR - Vítr" }
+                    { value: "AB1", text: "AB1: -60°C až +5°C, 3%-100% RH" },
+                    { value: "AB2", text: "AB2: -40°C až +5°C, 0.1%-100% RH" },
+                    { value: "AB3", text: "AB3: -25°C až +5°C, 0.5%-100% RH" },
+                    { value: "AB4", text: "AB4: -5°C až +40°C, 5%-95% RH (Normální)" },
+                    { value: "AB5", text: "AB5: +5°C až +40°C, 5%-85% RH (Normální)" },
+                    { value: "AB6", text: "AB6: +5°C až +60°C, 10%-100% RH" },
+                    { value: "AB7", text: "AB7: -25°C až +55°C, 10%-100% RH" },
+                    { value: "AB8", text: "AB8: -50°C až +40°C, 10%-100% RH" },
                 ]
             },
             {
-                label: "Vlivy osob, nebezpečí a konstrukční vlivy:",
-                idPrefix: "personHazardConst",
-                hint: "Vlivy způsobilosti osob, styku se zemí, možnosti evakuace, hořlavosti materiálů, nebezpečí výbuchu a požáru, a konstrukce budovy.",
+                label: "AC - Nadmořská výška",
+                categoryCode: "AC",
                 influences: [
-                    { value: "BA - Způsobilost osob", text: "BA - Způsobilost osob" },
-                    { value: "BB - Styk s potenciálem země", text: "BB - Styk s potenciálem země" },
-                    { value: "BC - Možnost evakuace", text: "BC - Možnost evakuace" },
-                    { value: "CA - Hořlavost stavebních hmot", text: "CA - Hořlavost stavebních hmot" },
-                    { value: "DB - Nebezpečí výbuchu", text: "DB - Nebezpečí výbuchu" },
-                    { value: "DC - Nebezpečí požáru", text: "DC - Nebezpečí požáru" },
-                    { value: "BE - Povaha zpracovávaných nebo skladovaných látek", text: "BE - Povaha zpracovávaných nebo skladovaných látek" },
-                    { value: "CB - Konstrukce budovy", text: "CB - Konstrukce budovy" }
+                    { value: "AC1", text: "AC1: ≤ 2000 m (Normální)" },
+                    { value: "AC2", text: "AC2: > 2000 m" },
+                ]
+            },
+            {
+                label: "AD - Přítomnost vody",
+                categoryCode: "AD",
+                influences: [
+                    { value: "AD1", text: "AD1: Zanedbatelná (Normální)" },
+                    { value: "AD2", text: "AD2: Možnost padajících kapek" },
+                    { value: "AD3", text: "AD3: Vodní tříšť" },
+                    { value: "AD4", text: "AD4: Stříkající voda" },
+                    { value: "AD5", text: "AD5: Tryskající voda" },
+                    { value: "AD6", text: "AD6: Vlny" },
+                    { value: "AD7", text: "AD7: Mělké ponoření" },
+                    { value: "AD8", text: "AD8: Hluboké ponoření" },
+                ]
+            },
+            {
+                label: "AE - Cizí pevná tělesa",
+                categoryCode: "AE",
+                influences: [
+                    { value: "AE1", text: "AE1: Zanedbatelná (Normální)" },
+                    { value: "AE2", text: "AE2: Malé předměty (2,5 mm)" },
+                    { value: "AE3", text: "AE3: Velmi malé předměty (1 mm)" },
+                    { value: "AE4", text: "AE4: Lehká prašnost" },
+                    { value: "AE5", text: "AE5: Střední prašnost" },
+                    { value: "AE6", text: "AE6: Silná prašnost" },
+                ]
+            },
+            {
+                label: "AF - Korozivní/znečišťující látky",
+                categoryCode: "AF",
+                influences: [
+                    { value: "AF1", text: "AF1: Zanedbatelná (Normální)" },
+                    { value: "AF2", text: "AF2: Atmosférický" },
+                    { value: "AF3", text: "AF3: Občasný či příležitostný" },
+                    { value: "AF4", text: "AF4: Trvalý" },
+                ]
+            },
+            {
+                label: "AG - Ráz",
+                categoryCode: "AG",
+                influences: [
+                    { value: "AG1", text: "AG1: Mírný (Normální)" },
+                    { value: "AG2", text: "AG2: Střední" },
+                    { value: "AG3", text: "AG3: Silný" },
+                ]
+            },
+            {
+                label: "AH - Vibrace",
+                categoryCode: "AH",
+                influences: [
+                    { value: "AH1", text: "AH1: Mírné (Normální)" },
+                    { value: "AH2", text: "AH2: Střední" },
+                    { value: "AH3", text: "AH3: Silné" },
+                ]
+            },
+            {
+                label: "AJ - Ostatní mechanická namáhání",
+                categoryCode: "AJ",
+                influences: [
+                    { value: "AJ", text: "AJ: Ostatní mechanická namáhání" },
+                ]
+            },
+            {
+                label: "AK - Rostlinstvo/plísně",
+                categoryCode: "AK",
+                influences: [
+                    { value: "AK1", text: "AK1: Bez nebezpečí (Normální)" },
+                    { value: "AK2", text: "AK2: Nebezpečný" },
+                ]
+            },
+            {
+                label: "AL - Živočichové",
+                categoryCode: "AL",
+                influences: [
+                    { value: "AL1", text: "AL1: Bez nebezpečí (Normální)" },
+                    { value: "AL2", text: "AL2: Nebezpečný" },
+                ]
+            },
+            {
+                label: "AM - Elektromagnetické vlivy",
+                categoryCode: "AM",
+                influences: [
+                    { value: "AM1-1", text: "AM1-1: Harmonické, meziharmonické: Kontrolovaná úroveň (Normální)" },
+                    { value: "AM1-2", text: "AM1-2: Harmonické, meziharmonické: Normální úroveň" },
+                    { value: "AM1-3", text: "AM1-3: Harmonické, meziharmonické: Vysoká úroveň" },
+                    { value: "AM2-1", text: "AM2-1: Signální napětí: Kontrolovaná úroveň (Normální)" },
+                    { value: "AM2-2", text: "AM2-2: Signální napětí: Střední úroveň" },
+                    { value: "AM2-3", text: "AM2-3: Signální napětí: Vysoká úroveň" },
+                    { value: "AM3-1", text: "AM3-1: Změny amplitudy napětí: Kontrolovaná úroveň (Normální)" },
+                    { value: "AM3-2", text: "AM3-2: Změny amplitudy napětí: Normální úroveň" },
+                    { value: "AM4", text: "AM4: Neustálené napětí" },
+                    { value: "AM5", text: "AM5: Změny kmitočtu" },
+                    { value: "AM6", text: "AM6: Indukované napětí nízkého kmitočtu" },
+                    { value: "AM7", text: "AM7: Stejnosměrný proud v obvodech střídavého proudu" },
+                    { value: "AM8-1", text: "AM8-1: Vyzařovaná magnetická pole: Střední úroveň" },
+                    { value: "AM8-2", text: "AM8-2: Vyzařovaná magnetická pole: Vysoká úroveň" },
+                    { value: "AM9-1", text: "AM9-1: Elektrická pole: Zanedbatelná úroveň (Normální)" },
+                    { value: "AM9-2", text: "AM9-2: Elektrická pole: Střední úroveň" },
+                    { value: "AM9-3", text: "AM9-3: Elektrická pole: Vysoká úroveň" },
+                    { value: "AM9-4", text: "AM9-4: Elektrická pole: Velmi vysoká úroveň" },
+                    { value: "AM21", text: "AM21: Indukované oscilující napětí nebo proudy" },
+                    { value: "AM22-1", text: "AM22-1: Šířené vedením (nanosekundy): Zanedbatelná úroveň (Normální)" },
+                    { value: "AM22-2", text: "AM22-2: Šířené vedením (nanosekundy): Střední úroveň" },
+                    { value: "AM22-3", text: "AM22-3: Šířené vedením (nanosekundy): Vysoká úroveň" },
+                    { value: "AM22-4", text: "AM22-4: Šířené vedením (nanosekundy): Velmi vysoká úroveň" },
+                    { value: "AM23-1", text: "AM23-1: Šířené vedením (milisekundy/mikrosekundy): Kontrolovaná úroveň (Normální)" },
+                    { value: "AM23-2", text: "AM23-2: Šířené vedením (milisekundy/mikrosekundy): Střední úroveň" },
+                    { value: "AM23-3", text: "AM23-3: Šířené vedením (milisekundy/mikrosekundy): Vysoká úroveň" },
+                    { value: "AM24-1", text: "AM24-1: Oscilační přechodové jevy šířené vedením: Střední úroveň" },
+                    { value: "AM24-2", text: "AM24-2: Oscilační přechodové jevy šířené vedením: Vysoká úroveň" },
+                    { value: "AM25-1", text: "AM25-1: Jevy vyzařované s vysokým kmitočtem: Zanedbatelná úroveň (Normální)" },
+                    { value: "AM25-2", text: "AM25-2: Jevy vyzařované s vysokým kmitočtem: Střední úroveň" },
+                    { value: "AM25-3", text: "AM25-3: Jevy vyzařované s vysokým kmitočtem: Vysoká úroveň" },
+                    { value: "AM31-1", text: "AM31-1: Elektrostatické výboje: Nízká úroveň (Normální)" },
+                    { value: "AM31-2", text: "AM31-2: Elektrostatické výboje: Střední úroveň" },
+                    { value: "AM31-3", text: "AM31-3: Elektrostatické výboje: Vysoká úroveň" },
+                    { value: "AM31-4", text: "AM31-4: Elektrostatické výboje: Velmi vysoká úroveň" },
+                    { value: "AM41-1", text: "AM41-1: Ionizace" },
+                ]
+            },
+            {
+                label: "AN - Sluneční záření",
+                categoryCode: "AN",
+                influences: [
+                    { value: "AN1", text: "AN1: Nízká (Normální)" },
+                    { value: "AN2", text: "AN2: Střední úroveň" },
+                    { value: "AN3", text: "AN3: Vysoká úroveň" },
+                ]
+            },
+            {
+                label: "AP - Seizmické účinky",
+                categoryCode: "AP",
+                influences: [
+                    { value: "AP1", text: "AP1: Normální (≤30 Gal) (Normální)" },
+                    { value: "AP2", text: "AP2: Nízké ohrožení (>30-300 Gal)" },
+                    { value: "AP3", text: "AP3: Střední ohrožení (>300-600 Gal)" },
+                    { value: "AP4", text: "AP4: Vysoké ohrožení (>600 Gal)" },
+                ]
+            },
+            {
+                label: "AQ - Blesková úroveň",
+                categoryCode: "AQ",
+                influences: [
+                    { value: "AQ1", text: "AQ1: Zanedbatelná (Ng≤2, Nk≤25 bouřkových dní) (Normální)" },
+                    { value: "AQ2", text: "AQ2: Nepřímé ohrožení (Ng>2.5, Nk>25 bouřkových dní)" },
+                    { value: "AQ3", text: "AQ3: Přímé ohrožení" },
+                ]
+            },
+            {
+                label: "AR - Pohyb vzduchu",
+                categoryCode: "AR",
+                influences: [
+                    { value: "AR1", text: "AR1: Pomalý (≤1 m/s) (Normální)" },
+                    { value: "AR2", text: "AR2: Střední (>1-5 m/s)" },
+                    { value: "AR3", text: "AR3: Silný (>5-10 m/s)" },
+                ]
+            },
+            {
+                label: "AS - Vítr",
+                categoryCode: "AS",
+                influences: [
+                    { value: "AS1", text: "AS1: Malý (≤20 m/s) (Normální)" },
+                    { value: "AS2", text: "AS2: Střední (>20-30 m/s)" },
+                    { value: "AS3", text: "AS3: Silný (>30-50 m/s)" },
+                ]
+            },
+            {
+                label: "BA - Způsobilost osob",
+                categoryCode: "BA",
+                influences: [
+                    { value: "BA1", text: "BA1: Běžná (laici) (Normální)" },
+                    { value: "BA2", text: "BA2: Děti" },
+                    { value: "BA3", text: "BA3: Osoby se zdravotním postižením" },
+                    { value: "BA4", text: "BA4: Poučené osoby" },
+                    { value: "BA5", text: "BA5: Osoby znalé" },
+                ]
+            },
+            {
+                label: "BB - Elektrický odpor lidského těla",
+                categoryCode: "BB",
+                influences: [
+                    { value: "BB", text: "BB: Elektrický odpor lidského těla (připravuje se) (Normální)" },
+                ]
+            },
+            {
+                label: "BC - Styk s potenciálem země",
+                categoryCode: "BC",
+                influences: [
+                    { value: "BC1", text: "BC1: Žádný (nevodivé prostředí) (Normální)" },
+                    { value: "BC2", text: "BC2: Výjimečný (Normální)" },
+                    { value: "BC3", text: "BC3: Častý" },
+                    { value: "BC4", text: "BC4: Trvalý" },
+                ]
+            },
+            {
+                label: "BD - Možnost evakuace",
+                categoryCode: "BD",
+                influences: [
+                    { value: "BD1", text: "BD1: Malá hustota/snadný únik (Normální)" },
+                    { value: "BD2", text: "BD2: Malá hustota/obtížný únik" },
+                    { value: "BD3", text: "BD3: Velká hustota/snadný únik" },
+                    { value: "BD4", text: "BD4: Velká hustota/obtížný únik" },
+                ]
+            },
+            {
+                label: "BE - Povaha látek",
+                categoryCode: "BE",
+                influences: [
+                    { value: "BE1", text: "BE1: Bez významného nebezpečí (Normální)" },
+                    { value: "BE2", text: "BE2: Nebezpečí požáru (obecné)" },
+                    { value: "BE3", text: "BE3: Nebezpečí výbuchu (obecné)" },
+                    { value: "BE4", text: "BE4: Nebezpečí kontaminace" },
+                    { value: "BE2N1", text: "BE2N1: Nebezpečí požáru hořlavých hmot" },
+                    { value: "BE2N2", text: "BE2N2: Nebezpečí hořlavých prachů" },
+                    { value: "BE2N3", text: "BE2N3: Nebezpečí požáru hořlavých kapalin" },
+                    { value: "BE3N1", text: "BE3N1: Nebezpečí výbuchu hořlavých prachů" },
+                    { value: "BE3N2", text: "BE3N2: Nebezpečí výbuchu hořlavých plynů a par" },
+                    { value: "BE3N3", text: "BE3N3: Nebezpečí výbuchu výbušnin" },
+                ]
+            },
+            {
+                label: "CA - Hořlavost stavebních hmot",
+                categoryCode: "CA",
+                influences: [
+                    { value: "CA1", text: "CA1: Nehořlavé (Normální)" },
+                    { value: "CA2", text: "CA2: Hořlavé" },
+                ]
+            },
+            {
+                label: "CB - Konstrukce budovy",
+                categoryCode: "CB",
+                influences: [
+                    { value: "CB1", text: "CB1: Zanedbatelné nebezpečí (Normální)" },
+                    { value: "CB2", text: "CB2: Šíření požáru" },
+                    { value: "CB3", text: "CB3: Posun" },
+                    { value: "CB4", text: "CB4: Poddajné nebo nestabilní" },
                 ]
             }
         ];
-        const influenceDetails = { "AA - Okolní teplota": { article: "522.1", explanation: "Vedení musí být zvolena a zřízena tak, aby odpovídala všem teplotám mezi nejvyšší a nejnižší teplotou okolí v místě instalace a aby nebyly překročeny mezní teploty při normálním provozu a v případě poruchy." }, "AB - Vysoká vlhkost": { article: "522.3", explanation: "Vedení musí být zvolena a zřízena tak, aby nedošlo k žádnému poškození kondenzací vzdušné vlhkosti nebo vniknutím vody. Hotová vedení musí vyhovovat stupni ochrany IP." }, "AD - Přítomnost vody": { article: "522.3", explanation: "Vedení musí být zvolena a zřízena tak, aby nedošlo k žádnému poškození kondenzací vzdušné vlhkosti nebo vniknutím vody (např. stříkající voda, ponoření). Hotová vedení musí vyhovovat stupni ochrany IP." }, "AE - Přítomnost cizích pevných těles": { article: "522.4", explanation: "Vedení musí být zvolena a zřízena tak, aby se minimalizovalo nebezpečí od vniknutí cizích pevných těles (např. prach, úlomky). Hotová vedení musí odpovídat stupni ochrany krytem IP." }, "AF - Korozivní/znečišťující látky": { article: "522.5", explanation: "Pokud je pravděpodobná přítomnost korozivních nebo znečišťujících látek, musí být části vedení vhodně chráněny nebo vyrobeny z odolného materiálu (např. chemické výpary, solanka)." }, "AG - Ráz": { article: "522.6", explanation: "Vedení musí být zvolena a zřízena tak, aby se minimalizovalo nebezpečí od mechanického namáhání, např. rázem, úderem nebo stlačením (např. prostory s vysokozdvižnými vozíky)." }, "AH - Vibrace": { article: "522.7", explanation: "Vedení podepíraná nebo připevněná k vibrujícím zařízením musí být pro tyto podmínky vhodná, zvláště kabely a kabelové spoje (např. připojení k motorům)." }, "AJ - Ostatní mechanická namáhání": { article: "522.8", explanation: "Vedení musí být zvolena a zřízena tak, aby se zabránilo poškození kabelů a jejich zakončení během instalace, používání nebo údržby (např. tahové namáhání, ohyby, upevnění, uložení v zemi)." }, "AK - Výskyt rostlinstva nebo plísní": { article: "522.9", explanation: "V místech s prokázaným nebo předpokládaným rizikem růstu rostlinstva nebo plísní musí být vedení vhodně zvolena nebo přijata zvláštní ochranná opatření (např. uzavřené systémy)." }, "AL - Výskyt živočichů": { article: "522.10", explanation: "V místech s prokázaným nebo předpokládaným rizikem působení živočichů (např. hlodavců) musí být vedení vhodně zvolena nebo přijata zvláštní ochranná opatření (např. mechanická ochrana)." }, "AN - Sluneční záření a ultrafialové záření": { article: "522.11", explanation: "Vystavená vedení musí být pro tyto podmínky vhodného provedení nebo vybavena odpovídajícím stíněním proti slunečnímu a ultrafialovému záření." }, "AP - Seizmické účinky": { article: "522.12", explanation: "Vedení musí být zvolena a instalována s řádným ohledem na seizmická nebezpečí v místě instalace, s důrazem na upevnění a poddajnost spojení." }, "AR - Vítr": { article: "522.13", explanation: "Vlivy větru je třeba posuzovat ve spojení s vibracemi (AH) a ostatním mechanickým namáháním (AJ), které mohou způsobit poškození vedení." }, "BE - Povaha zpracovávaných nebo skladovaných látek": { article: "522.14", explanation: "Je třeba brát ohled na povahu látek, které mohou ovlivnit požární bezpečnost instalace. Viz také článek 422 (ochrana před požárem) a 527 (omezení šíření požáru)." }, "CB - Konstrukce budovy": { article: "522.15", explanation: "Vedení musí být zvolena a instalována s ohledem na možný posun konstrukce (např. dilatace) tak, aby vodiče a kabely nebyly vystaveny nadměrnému mechanickému namáhání." }, "BA - Způsobilost osob": { article: "ČSN 33 2000-4-41 (Obecně)", explanation: "Nutnost zohlednit úroveň způsobilosti osob (např. znalé, poučené, laici) při návrhu a umístění elektrických instalací pro zajištění ochrany před úrazem elektrickým proudem." }, "BB - Styk s potenciálem země": { article: "ČSN 33 2000-4-41 (Obecně)", explanation: "Vliv možnosti styku osob s potenciálem země, který ovlivňuje požadavky na doplňková ochranná opatření (např. v mokrých prostorech)." }, "BC - Možnost evakuace": { article: "ČSN 33 2000-4-41 / 527 (Obecně)", explanation: "Zohlednění podmínek evakuace osob v případě nebezpečí, což ovlivňuje volbu a instalaci vedení, zejména v únikových cestách a shromaždištích." }, "CA - Hořlavost stavebních hmot": { article: "527 (Obecně)", explanation: "Výběr a stavba vedení musí minimalizovat šíření požáru s ohledem na hořlavost stavebních hmot v objektu (např. dřevostavby)." }, "DB - Nebezpečí výbuchu": { article: "422 / 527 (Obecně)", explanation: "Instalace musí být provedena tak, aby byly splněny zvláštní požadavky na ochranu v prostorách s nebezpečím výbuchu (např. zóny s výbušnou atmosférou)." }, "DC - Nebezpečí požáru": { article: "422 / 527 (Obecně)", explanation: "Instalace musí být navržena a zřízena s ohledem na ochranu před vznikem a šířením požáru, včetně volby vhodných materiálů a uspořádání vedení (např. místnosti s otevřeným ohněm, sklady hořlavých látek)." } };
-        const wiringSystemOptions = [ { optgroup: "Obecné typy vedení (čl. 521)" }, { value: "521.4: Přípojnicové rozvody a soustavy připojnic", text: "521.4: Přípojnicové rozvody a soustavy připojnic" }, { value: "521.5: Obvody střídavého proudu - elektromagnetické účinky", text: "521.5: Obvody střídavého proudu - elektromagnetické účinky" }, { value: "521.6: Systémy instalačních trubek, kanálů, lávek a roštů", text: "521.6: Systémy instalačních trubek, kanálů, lávek a roštů" }, { value: "521.7: Několik obvodů v jednom kabelu", text: "521.7: Několik obvodů v jednom kabelu" }, { value: "521.8: Uspořádání obvodů", text: "521.8: Uspořádání obvodů" }, { value: "521.9: Použití ohebných kabelů a šňůr", text: "521.9: Použití ohebných kabelů a šňůr" }, { value: "521.10: Instalace kabelů (izolované vodiče)", text: "521.10: Instalace kabelů (izolované vodiče)" }, { optgroup: "Referenční způsoby uložení (Příloha A.52.3)" }, { value: "A1: Izol. vodiče/jednožilov. kabely v trubce v tepelně izolační stěně", text: "A1: Izol. vodiče/jednožilov. kabely v trubce v tepelně izolační stěně" }, { value: "A2: Vícežilové kabely v trubce v tepelně izolační stěně", text: "A2: Vícežilové kabely v trubce v tepelně izolační stěně" }, { value: "B1: Izol. vodiče/jednožilov. kabely v trubce na dřevěné/zděné stěně", text: "B1: Izol. vodiče/jednožilov. kabely v trubce na dřevěné/zděné stěně" }, { value: "B2: Vícežilové kabely v trubce na dřevěné/zděné stěně", text: "B2: Vícežilové kabely v trubce na dřevěné/zděné stěně" }, { value: "C: Jednožilov./vícežilov. kabely na dřevěné/zděné stěně (přímo)", text: "C: Jednožilov./vícežilov. kabely na dřevěné/zděné stěně (přímo)" }, { value: "D1: Vícežilov. kabely v trubkách v zemi", text: "D1: Vícežilov. kabely v trubkách v zemi" }, { value: "D2: Jednožilov./vícežilov. kabely přímo v zemi", text: "D2: Jednožilov./vícežilov. kabely přímo v zemi" }, { value: "E: Vícežilov. kabely ve volném vzduchu (od zdi >0.3 průměru)", text: "E: Vícežilov. kabely ve volném vzduchu (od zdi >0.3 průměru)" }, { value: "F: Jednožilov. kabely ve volném vzduchu (dotýkající se)", text: "F: Jednožilov. kabely ve volném vzduchu (dotýkající se)" }, { value: "G: Jednožilov. kabely ve volném vzduchu (vzdálené)", text: "G: Jednožilov. kabely ve volném vzduchu (vzdálené)" }, { optgroup: "Další způsoby uložení (Příloha A.52.3 - Příklady)" }, { value: "Položka 10,11: V zavěšených úložných kanálech", text: "Položka 10,11: V zavěšených úložných kanálech" }, { value: "Položka 12: V tvárnicích", text: "Položka 12: V tvárnicích" }, { value: "Položka 15,16: V rámech dveří/oken", text: "Položka 15,16: V rámech dveří/oken" }, { value: "Položka 20-23: Na dřevěné/zděné stěně, pod stropem", text: "Položka 20-23: Na dřevěné/zděné stěně, pod stropem" }, { value: "Položka 30-36: Na lávkách, žebřících, konzolách, izolátorech", text: "Položka 30-36: Na lávkách, žebřících, konzolách, izolátorech" }, { value: "Položka 40-47: Ve stavebních dutinách (trubky, kanály)", text: "Položka 40-47: Ve stavebních dutinách (trubky, kanály)" }, { value: "Položka 50-53: V podlaze (zapuštěné kanály)", text: "Položka 50-53: V podlaze (zapuštěné kanály)" }, { value: "Položka 54-56: V kabelových kanálech (větrané/nevětrané)", text: "Položka 54-56: V kabelových kanálech (větrané/nevětrané)" }, { value: "Položka 57-60: Přímo ve zdivu", text: "Položka 57-60: Přímo ve zdivu" }, { value: "Položka 70-73: Uložené v zemi", text: "Položka 70-73: Uložené v zemi" } ];
+
+
+        const wiringSystemOptions = [
+            { optgroup: "Obecné typy vedení (čl. 521)" },
+            { value: "521.4: Přípojnicové rozvody a soustavy připojnic", text: "521.4: Přípojnicové rozvody a soustavy připojnic" },
+            { value: "521.5: Obvody střídavého proudu - elektromagnetické účinky", text: "521.5: Obvody střídavého proudu - elektromagnetické účinky" },
+            { value: "521.6: Systémy instalačních trubek, kanálů, lávek a roštů", text: "521.6: Systémy instalačních trubek, kanálů, lávek a roštů" },
+            { value: "521.7: Několik obvodů v jednom kabelu", text: "521.7: Několik obvodů v jednom kabelu" },
+            { value: "521.8: Uspořádání obvodů", text: "521.8: Uspořádání obvodů" },
+            { value: "521.9: Použití ohebných kabelů a šňůr", text: "521.9: Použití ohebných kabelů a šňůr" },
+            { value: "521.10: Instalace kabelů (izolované vodiče)", text: "521.10: Instalace kabelů (izolované vodiče)" },
+            { optgroup: "Referenční způsoby uložení (Příloha A.52.3)" },
+            { value: "A1: Izol. vodiče/jednožilov. kabely v trubce v tepelně izolační stěně", text: "A1: Izol. vodiče/jednožilov. kabely v trubce v tepelně izolační stěně" },
+            { value: "A2: Vícežilové kabely v trubce v tepelně izolační stěně", text: "A2: Vícežilové kabely v trubce v tepelně izolační stěně" },
+            { value: "B1: Izol. vodiče/jednožilov. kabely v trubce na dřevěné/zděné stěně", text: "B1: Izol. vodiče/jednožilov. kabely v trubce na dřevěné/zděné stěně" },
+            { value: "B2: Vícežilové kabely v trubce na dřevěné/zděné stěně", text: "B2: Vícežilové kabely v trubce na dřevěné/zděné stěně" },
+            { value: "C: Jednožilov./vícežilov. kabely na dřevěné/zděné stěně (přímo)", text: "C: Jednožilov./vícežilov. kabely na dřevěné/zděné stěně (přímo)" },
+            { value: "D1: Vícežilov. kabely v trubkách v zemi", text: "D1: Vícežilov. kabely v trubkách v zemi" },
+            { value: "D2: Jednožilov./vícežilov. kabely přímo v zemi", text: "D2: Jednožilov./vícežilov. kabely přímo v zemi" },
+            { value: "E: Vícežilov. kabely ve volném vzduchu (od zdi >0.3 průměru)", text: "E: Vícežilov. kabely ve volném vzduchu (od zdi >0.3 průměru)" },
+            { value: "F: Jednožilov. kabely ve volném vzduchu (dotýkající se)", text: "F: Jednožilov. kabely ve volném vzduchu (dotýkající se)" },
+            { value: "G: Jednožilov. kabely ve volném vzduchu (vzdálené)", text: "G: Jednožilov. kabely ve volném vzduchu (vzdálené)" },
+            { optgroup: "Další způsoby uložení (Příloha A.52.3 - Příklady)" },
+            { value: "Položka 10,11: V zavěšených úložných kanálech", text: "Položka 10,11: V zavěšených úložných kanálech" },
+            { value: "Položka 12: V tvárnicích", text: "Položka 12: V tvárnicích" },
+            { value: "Položka 15,16: V rámech dveří/oken", text: "Položka 15,16: V rámech dveří/oken" },
+            { value: "Položka 20-23: Na dřevěné/zděné stěně, pod stropem", text: "Položka 20-23: Na dřevěné/zděné stěně, pod stropem" },
+            { value: "Položka 30-36: Na lávkách, žebřících, konzolách, izolátorech", text: "Položka 30-36: Na lávkách, žebřících, konzolách, izolátorech" },
+            { value: "Položka 40-47: Ve stavebních dutinách (trubky, kanály)", text: "Položka 40-47: Ve stavebních dutinách (trubky, kanály)" },
+            { value: "Položka 50-53: V podlaze (zapuštěné kanály)", text: "Položka 50-53: V podlaze (zapuštěné kanály)" },
+            { value: "Položka 54-56: V kabelových kanálech (větrané/nevětrané)", text: "Položka 54-56: V kabelových kanálech (větrané/nevětrané)" },
+            { value: "Položka 57-60: Přímo ve zdivu", text: "Položka 57-60: Přímo ve zdivu" },
+            { value: "Položka 70-73: Uložené v zemi", text: "Položka 70-73: Uložené v zemi" }
+        ];
 
         /**
          * Populates the wiringSystemSelect dropdown.
@@ -376,6 +915,22 @@
             for (let i = 0; i < num; i++) {
                 const roomDiv = document.createElement('div');
                 roomDiv.className = 'p-4 bg-gray-100 rounded-xl border border-gray-200 shadow-md';
+                
+                let influenceSelectsHtml = '';
+                influenceCategoriesForDropdowns.forEach(category => {
+                    // Find the default "Normal" value for this category, or pick the first one if none marked normal
+                    const defaultInfluence = category.influences.find(inf => detailedInfluences[inf.value] && detailedInfluences[inf.value].isNormal) || category.influences[0];
+                    const defaultValue = defaultInfluence ? defaultInfluence.value : '';
+
+                    influenceSelectsHtml += `
+                        <div class="flex-grow col-span-1 sm:col-span-2">
+                            <label for="${category.categoryCode}Select${i}" class="block text-gray-700 text-sm font-medium mb-1">${category.label}:</label>
+                            <select id="${category.categoryCode}Select${i}" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-base influence-select">
+                                ${category.influences.map(influence => `<option value="${influence.value}">${influence.text}</option>`).join('')}
+                            </select>
+                        </div>`;
+                });
+
                 roomDiv.innerHTML = `
                     <h3 class="text-xl font-semibold text-gray-800 mb-4">Místnost ${i + 1}</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
@@ -386,17 +941,9 @@
                         </div>
                         <div class="flex-grow col-span-1 sm:col-span-2 flex items-center mb-2">
                             <input type="checkbox" id="noInfluencesCheckbox${i}" class="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded no-influences-checkbox">
-                            <label for="noInfluencesCheckbox${i}" class="text-gray-700 font-medium">Explicitně označit, že nebyly zadány žádné specifické vnější vlivy.</label>
+                            <label for="noInfluencesCheckbox${i}" class="text-gray-700 font-medium">Označit jako "Normální prostor" (všechny vlivy nastaveny na normální).</label>
                         </div>
-                        ${influenceCategories.map(category => `
-                            <div class="flex-grow col-span-1 sm:col-span-2">
-                                <label for="${category.idPrefix}${i}" class="block text-gray-700 text-sm font-medium mb-1">${category.label}</label>
-                                <select id="${category.idPrefix}${i}" multiple size="5" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-base influence-select max-h-32 overflow-y-auto">
-                                    ${category.influences.map(influence => `<option value="${influence.value}">${influence.text}</option>`).join('')}
-                                </select>
-                                <p class="text-xs text-gray-500 mt-1">${category.hint}</p>
-                            </div>
-                        `).join('')}
+                        ${influenceSelectsHtml}
                     </div>`;
                 roomsContainer.appendChild(roomDiv);
 
@@ -406,7 +953,18 @@
                     influenceSelects.forEach(select => {
                         select.disabled = checkbox.checked;
                         if (checkbox.checked) {
-                            Array.from(select.options).forEach(option => option.selected = false);
+                            // Set to default normal value for each category
+                            const categoryCode = select.id.replace(/Select\d+/, '');
+                            const category = influenceCategoriesForDropdowns.find(cat => cat.categoryCode === categoryCode);
+                            if (category) {
+                                const defaultNormalOption = category.influences.find(inf => detailedInfluences[inf.value] && detailedInfluences[inf.value].isNormal);
+                                if (defaultNormalOption) {
+                                    select.value = defaultNormalOption.value;
+                                } else {
+                                    // If no normal option, select the first one or leave empty
+                                    select.value = category.influences.length > 0 ? category.influences[0].value : '';
+                                }
+                            }
                         }
                     });
                 });
@@ -421,17 +979,16 @@
             for (let i = 0; i < numRooms; i++) {
                 const roomDescription = document.getElementById(`roomDescription${i}`).value.trim();
                 const noInfluencesChecked = document.getElementById(`noInfluencesCheckbox${i}`).checked;
-                let selectedInfluences = [];
-                if (!noInfluencesChecked) {
-                    influenceCategories.forEach(category => {
-                        const influenceSelectEl = document.getElementById(`${category.idPrefix}${i}`);
-                        const selected = Array.from(influenceSelectEl.options)
-                            .filter(option => option.selected)
-                            .map(option => option.value);
-                        selectedInfluences.push(...selected);
-                    });
-                }
-                roomsData.push({ description: roomDescription, noInfluencesChecked, selectedInfluences });
+                let selectedInfluenceCodes = {}; // Object to store selected code for each category
+
+                influenceCategoriesForDropdowns.forEach(category => {
+                    const selectEl = document.getElementById(`${category.categoryCode}Select${i}`);
+                    if (selectEl) { // Ensure element exists
+                        selectedInfluenceCodes[category.categoryCode] = selectEl.value;
+                    }
+                });
+                
+                roomsData.push({ description: roomDescription, noInfluencesChecked, selectedInfluenceCodes });
             }
             const selectedWiringSystems = Array.from(wiringSystemSelect.selectedOptions).map(option => option.value);
             return {
@@ -439,6 +996,12 @@
                 preparedBy: preparedByInput.value.trim(),
                 client: clientInput.value.trim(),
                 buildingHeader: buildingHeaderInput.value.trim(),
+                commissionChairman: commissionChairmanInput.value.trim(), 
+                commissionMembers: commissionMembersInput.value.trim(),   
+                underlyingDocumentation: underlyingDocumentationInput.value.trim(), 
+                technicalRegulations: technicalRegulationsInput.value.trim(), 
+                revisionTerms: revisionTermsInput.value.trim(), 
+                commissionDecision: commissionDecisionInput.value.trim(), 
                 selectedWiringSystems,
                 additionalNotes: additionalNotesInput.value.trim(),
                 numRooms,
@@ -452,6 +1015,12 @@
             preparedByInput.value = data.preparedBy || '';
             clientInput.value = data.client || '';
             buildingHeaderInput.value = data.buildingHeader || '';
+            commissionChairmanInput.value = data.commissionChairman || ''; 
+            commissionMembersInput.value = data.commissionMembers || '';   
+            underlyingDocumentationInput.value = data.underlyingDocumentation || ''; 
+            technicalRegulationsInput.value = data.technicalRegulations || ''; 
+            revisionTermsInput.value = data.revisionTerms || ''; 
+            commissionDecisionInput.value = data.commissionDecision || ''; 
             additionalNotesInput.value = data.additionalNotes || '';
             updateProtocolNameInput();
 
@@ -469,14 +1038,14 @@
                     document.getElementById(`roomDescription${i}`).value = roomData.description || '';
                     const checkbox = document.getElementById(`noInfluencesCheckbox${i}`);
                     checkbox.checked = roomData.noInfluencesChecked || false;
-                    checkbox.dispatchEvent(new Event('change'));
+                    checkbox.dispatchEvent(new Event('change')); // Trigger change to disable/enable selects
 
-                    if (roomData.selectedInfluences && !roomData.noInfluencesChecked) {
-                        influenceCategories.forEach(category => {
-                            const selectEl = document.getElementById(`${category.idPrefix}${i}`);
-                            Array.from(selectEl.options).forEach(option => {
-                                option.selected = roomData.selectedInfluences.includes(option.value);
-                            });
+                    if (roomData.selectedInfluenceCodes) {
+                        influenceCategoriesForDropdowns.forEach(category => {
+                            const selectEl = document.getElementById(`${category.categoryCode}Select${i}`);
+                            if (selectEl && roomData.selectedInfluenceCodes[category.categoryCode]) {
+                                selectEl.value = roomData.selectedInfluenceCodes[category.categoryCode];
+                            }
                         });
                     }
                 });
@@ -516,27 +1085,35 @@
         /**
          * Loads a protocol from Firestore.
          */
-        async function loadProtocol() {
+        async function loadProtocol(protocolName) {
             if (!db || !userId) {
-                storageMessage.textContent = "Chyba: Databáze není připravena.";
-                storageMessage.style.color = 'red';
+                loadModalMessage.textContent = "Chyba: Databáze není připravena.";
+                loadModalMessage.style.color = 'red';
+                loadModalMessage.classList.remove('hidden');
                 return;
             }
-            const protocolName = prompt("Zadejte název protokolu k načtení:", protocolNameInput.value.trim());
-            if (!protocolName) return;
+            if (!protocolName) {
+                loadModalMessage.textContent = "Název protokolu je prázdný.";
+                loadModalMessage.style.color = 'red';
+                loadModalMessage.classList.remove('hidden');
+                return;
+            }
 
             try {
                 const protocolDocRef = doc(db, `artifacts/${appId}/users/${userId}/protocols`, protocolName);
                 const docSnap = await getDoc(protocolDocRef);
                 if (docSnap.exists()) {
                     populateFormWithData(docSnap.data());
+                    loadProtocolModal.classList.add('hidden'); // Hide modal on success
                 } else {
-                    storageMessage.textContent = `Protokol "${protocolName}" nenalezen.`;
-                    storageMessage.style.color = 'orange';
+                    loadModalMessage.textContent = `Protokol "${protocolName}" nenalezen.`;
+                    loadModalMessage.style.color = 'orange';
+                    loadModalMessage.classList.remove('hidden');
                 }
             } catch (e) {
-                storageMessage.textContent = `Chyba při načítání: ${e.message}`;
-                storageMessage.style.color = 'red';
+                loadModalMessage.textContent = `Chyba při načítání: ${e.message}`;
+                loadModalMessage.style.color = 'red';
+                loadModalMessage.classList.remove('hidden');
             }
         }
 
@@ -559,7 +1136,6 @@
             }
         }
 
-        // NEW FUNCTION: Handles going back to the form
         /**
          * Hides protocol output and shows the input form.
          */
@@ -570,71 +1146,312 @@
         }
 
         /**
+         * Calculates the IP rating for a given room based on selected AD and AE influences.
+         * @param {object} roomData - Data for the current room.
+         * @returns {string} The calculated IP rating (e.g., "IP44") or "Nezadáno".
+         */
+        function calculateIpRating(roomData) {
+            const adCode = roomData.selectedInfluenceCodes.AD;
+            const aeCode = roomData.selectedInfluenceCodes.AE;
+
+            const adDetail = detailedInfluences[adCode];
+            const aeDetail = detailedInfluences[aeCode];
+
+            let ipSolid = 'X'; // Default to X if no specific solid protection
+            let ipWater = 'X'; // Default to X if no specific water protection
+
+            if (aeDetail && typeof aeDetail.ipSolid !== 'undefined') {
+                ipSolid = aeDetail.ipSolid;
+            } else if (roomData.noInfluencesChecked) {
+                // If "Normal space" is checked, default to IP0X for solids
+                ipSolid = 0;
+            }
+
+            if (adDetail && typeof adDetail.ipWater !== 'undefined') {
+                ipWater = adDetail.ipWater;
+            } else if (roomData.noInfluencesChecked) {
+                // If "Normal space" is checked, default to IPX0 for water
+                ipWater = 0;
+            }
+            
+            // Handle cases where IPX1/IPX2 are both possible for AD2, sample implies IPX2 for some cases.
+            // For simplicity, we'll use the higher IPX2 for AD2 if not explicitly defined otherwise.
+            if (adCode === "AD2" && ipWater === 0) { 
+                ipWater = 2; 
+            }
+
+
+            if (ipSolid === 'X' && ipWater === 'X') {
+                return "Nezadáno";
+            }
+            return `IP${ipSolid}${ipWater}`;
+        }
+
+        /**
          * Generates the protocol HTML and plain text output.
          */
         function generateProtocol() {
             const data = collectFormData();
             let protocolHtml = "";
             let plainTextForCopy = "";
-            const roomsExplicitlyMarkedNoInfluences = [];
-            const allSelectedUniqueInfluences = new Set();
+            const uniqueOpatreniRefs = new Set(); 
             const generatedProtocolNumber = protocolNameInput.value;
+            // Removed roomsWithIpRatings as section J is removed.
 
             // --- Main Protocol Title ---
-            protocolHtml += `<h2 class="text-xl font-bold text-gray-800 my-4 text-center">PROTOKOL O URČENÍ VNĚJŠÍCH VLIVŮ<br>dle ČSN 33 2000-5-52 ed.2</h2>`;
-            plainTextForCopy += "PROTOKOL O URČENÍ VNĚJŠÍCH VLIVŮ\ndle ČSN 33 2000-5-52 ed.2\n\n";
+            protocolHtml += `<h2 class="text-xl font-bold text-gray-800 my-4 text-center">PROTOKOL O URČENÍ VNĚJŠÍCH VLIVŮ<br>DLE ČSN 33 2000-5-51 ed.3 +Z1 + Z2 (7:2022)</h2>`;
+            plainTextForCopy += "PROTOKOL O URČENÍ VNĚJŠÍCH VLIVŮ\nDLE ČSN 33 2000-5-51 ed.3 +Z1 + Z2 (7:2022)\n\n";
 
             // --- Header Details ---
-            let headerHtml = '<div style="display: flex; justify-content: space-between; align-items: flex-start;">';
+            protocolHtml += `<div class="text-base leading-relaxed mb-4">`;
             let plainTextDate = data.date ? `Datum vypracování: ${data.date}` : '';
-            let plainTextNum = generatedProtocolNumber ? `Číslo protokolu: ${generatedProtocolNumber}` : '';
-            headerHtml += `<p><strong>Datum vypracování:</strong> ${data.date || 'Nezadáno'}</p>`;
-            headerHtml += `<p><strong>Číslo protokolu:</strong> ${generatedProtocolNumber || 'Nezadáno'}</p></div>`;
+            let plainTextNum = generatedProtocolNumber ? `Ev.č. protokolu: ${generatedProtocolNumber}` : '';
+            protocolHtml += `<p style="display: flex; justify-content: space-between;"><span><strong>Datum vypracování:</strong> ${data.date || 'Nezadáno'}</span><span><strong>Ev.č. protokolu:</strong> ${generatedProtocolNumber || 'Nezadáno'}</span></p>`;
             plainTextForCopy += `${plainTextDate}${' '.repeat(Math.max(1, 80 - plainTextDate.length - plainTextNum.length))}${plainTextNum}\n`;
-            if (data.preparedBy) { headerHtml += `<p><strong>Vypracoval:</strong> ${data.preparedBy}</p>`; plainTextForCopy += `Vypracoval: ${data.preparedBy}\n`; }
-            if (data.client) { headerHtml += `<p><strong>Zadavatel:</strong> ${data.client}</p>`; plainTextForCopy += `Zadavatel: ${data.client}\n`; }
-            if (data.buildingHeader) { headerHtml += `<p><strong>Objekt:</strong> ${data.buildingHeader}</p>`; plainTextForCopy += `Objekt: ${data.buildingHeader}\n`; }
-            if (data.selectedWiringSystems.length > 0) { headerHtml += `<p><strong>Popis typů vedení a uložení:</strong><br>${data.selectedWiringSystems.join(', ')}</p>`; plainTextForCopy += `\nPopis typů vedení a uložení:\n${data.selectedWiringSystems.join(', ')}\n`; }
-            if (data.additionalNotes) { headerHtml += `<p><strong>Doplňující poznámky:</strong><br>${data.additionalNotes.replace(/\n/g, '<br>')}</p>`; plainTextForCopy += `\nDoplňující poznámky:\n${data.additionalNotes}\n`; }
-            protocolHtml += headerHtml;
+            if (data.preparedBy) { protocolHtml += `<p><strong>Vypracoval:</strong> ${data.preparedBy}</p>`; plainTextForCopy += `Vypracoval: ${data.preparedBy}\n`; }
+            if (data.client) { protocolHtml += `<p><strong>Zadavatel:</strong> ${data.client}</p>`; plainTextForCopy += `Zadavatel: ${data.client}\n`; }
+            if (data.buildingHeader) { protocolHtml += `<p><strong>Objekt:</strong> ${data.buildingHeader}</p>`; plainTextForCopy += `Objekt: ${data.buildingHeader}\n`; }
+            protocolHtml += `</div>`;
+            plainTextForCopy += "\n";
+
+            // --- OBSAH ---
+            protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">OBSAH:</h3>`;
+            plainTextForCopy += "OBSAH:\n";
+            protocolHtml += `<ul class="list-none ml-4 text-sm">`;
+            plainTextForCopy += `A. Úvod\n`;
+            protocolHtml += `<li>A. Úvod</li>`;
+            if (data.commissionChairman || data.commissionMembers) {
+                protocolHtml += `<li>B. Složení komise</li>`;
+                plainTextForCopy += `B. Složení komise\n`;
+            }
+            if (data.underlyingDocumentation) {
+                protocolHtml += `<li>C. Podkladová dokumentace</li>`;
+                plainTextForCopy += `C. Podkladová dokumentace\n`;
+            }
+            if (data.technicalRegulations) {
+                protocolHtml += `<li>D. Použité technické předpisy a normy</li>`;
+                plainTextForCopy += `D. Použité technické předpisy a normy\n`;
+            }
+            // E. Vstupní informace - technické údaje o zařízení (this is covered by room descriptions)
+            protocolHtml += `<li>E. Vstupní informace - technické údaje o zařízení (Seznam místností a prováděné činnosti)</li>`;
+            plainTextForCopy += `E. Vstupní informace - technické údaje o zařízení (Seznam místností a prováděné činnosti)\n`;
+
+            protocolHtml += `<li>F. Určení vnějších vlivů (detailní tabulky)</li>`;
+            plainTextForCopy += `F. Určení vnějších vlivů (detailní tabulky)\n`;
+
+            if (data.revisionTerms) {
+                protocolHtml += `<li>G. Stanovení termínů pravidelných revizí</li>`;
+                plainTextForCopy += `G. Stanovení termínů pravidelných revizí\n`;
+            }
+            // Collect technical measures to see if section H is needed
+            data.rooms.forEach(roomData => {
+                if (!roomData.noInfluencesChecked) {
+                    for (const categoryCode in roomData.selectedInfluenceCodes) {
+                        const influenceCode = roomData.selectedInfluenceCodes[categoryCode];
+                        const influenceDetail = detailedInfluences[influenceCode];
+                        if (influenceDetail && !influenceDetail.isNormal && influenceDetail.opatreniRef) {
+                            uniqueOpatreniRefs.add(influenceDetail.opatreniRef);
+                        }
+                    }
+                }
+            });
+            if (uniqueOpatreniRefs.size > 0) {
+                protocolHtml += `<li>H. Technická opatření</li>`;
+                plainTextForCopy += `H. Technická opatření\n`;
+            }
+            // Section J for IP recommendations removed as per user request.
+            // If it were present, it would be here.
+
+            if (data.commissionDecision) {
+                protocolHtml += `<li>I. Rozhodnutí komise</li>`; // Changed to I (was K)
+                plainTextForCopy += `I. Rozhodnutí komise\n`;
+            }
+            protocolHtml += `</ul>`;
+            plainTextForCopy += "\n";
 
             protocolHtml += `<p class="mt-4">---</p>`;
-            plainTextForCopy += "\n---\n\n";
+            plainTextForCopy += "---\n\n";
 
-            // --- Rooms Table ---
+            // --- A. Úvod ---
+            protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">A. Úvod</h3>`;
+            plainTextForCopy += "A. Úvod\n";
+            protocolHtml += `<p class="text-sm mb-4">Zpracování tohoto „Protokolu o určení vnějších vlivů" bylo provedeno na základě objednávky zadavatele pro objekt ${data.buildingHeader || 'nezadáno'}.</p>`;
+            plainTextForCopy += `Zpracování tohoto „Protokolu o určení vnějších vlivů" bylo provedeno na základě objednávky zadavatele pro objekt ${data.buildingHeader || 'nezadáno'}.\n\n`;
+            protocolHtml += `<p class="text-sm mb-4">Protokol o určení vnějších vlivů je základní dokument pro přípravu projektové dokumentace, který zachycuje možná rizika a z nich vyplývající skutečnosti a zásadní technické požadavky na elektrickou instalaci. Vyhodnocení vnějších vlivů a z nich vyplývající technické požadavky na elektrickou instalaci stanovují kromě projektanta elektrické instalace i další specialisté z oborů, které mají na návrh a provoz elektrického instalace a elektrického zařízení navrhovaného objektu vliv. Zároveň je protokol o určení vnějších vlivů působících na elektrickou instalace nebo elektrické zařízení v době provedení ze základních dokumentů potřebných pro vedení revize (výchozí, pravidelné, mimořádné).</p>`;
+            plainTextForCopy += `Protokol o určení vnějších vlivů je základní dokument pro přípravu projektové dokumentace, který zachycuje možná rizika a z nich vyplývající skutečnosti a zásadní technické požadavky na elektrickou instalaci. Vyhodnocení vnějších vlivů a z nich vyplývající technické požadavky na elektrickou instalaci stanovují kromě projektanta elektrické instalace i další specialisté z oborů, které mají na návrh a provoz elektrického instalace a elektrického zařízení navrhovaného objektu vliv. Zároveň je protokol o určení vnějších vlivů působících na elektrickou instalace nebo elektrické zařízení v době provedení ze základních dokumentů potřebných pro vedení revize (výchozí, pravidelné, mimořádné).\n\n`;
+            protocolHtml += `<p class="text-sm mb-4">Samotné šetření v rámci „Určování vnějších vlivů" bylo rozděleno do několika etap: Fyzická prohlídka a Zpracování „Protokolu o určení vnějších vlivů". Protokol o určení vnějších vlivů je součástí projektové dokumentace skutečného provedení stavby. Tato dokumentace musí být po dobu životnosti zařízení, provozu či objektu uložena a je předkládána při periodických či jiných revizích elektrické instalace nebo elektrického zařízení.</p>`;
+            plainTextForCopy += `Samotné šetření v rámci „Určování vnějších vlivů" bylo rozděleno do několika etap: Fyzická prohlídka a Zpracování „Protokolu o určení vnějších vlivů". Protokol o určení vnějších vlivů je součástí projektové dokumentace skutečného provedení stavby. Tato dokumentace musí být po dobu životnosti zařízení, provozu či objektu uložena a je předkládána při periodických či jiných revizích elektrické instalace nebo elektrického zařízení.\n\n`;
+            protocolHtml += `<p class="text-sm mb-4">Při změnách využití objektu (technologie, změně výrobního zařízení, používaných nebo skladovaných hmot apod.) musí být znovu provedeno vyhodnocení rizik a určení vnějších vlivů podle platných technických norem a případně dalších, zejména legislativních, dokumentů.</p>`;
+            plainTextForCopy += `Při změnách využití objektu (technologie, změně výrobního zařízení, používaných nebo skladovaných hmot apod.) musí být znovu provedeno vyhodnocení rizik a určení vnějších vlivů podle platných technických norem a případně dalších, zejména legislativních, dokumentů.\n\n`;
+            protocolHtml += `<p class="text-sm mb-4">Pro každý posuzovaný objekt je vypracován samostatný list nazvaný jako „Zatřídění vnějších vlivů". Tento list je pojat jako tabulka, kde jsou vypsány všechny vlivy, tak jak je určuje ČSN 33 2000-5-51 ed.3+Z1-Z2 (7:2010), a ke každému vlivu je přiřazeno příslušné označení vlivu, včetně jeho třídy. Po tomto zařazení jednotlivých vlivů je vždy určeno, jestli se z hlediska bezpečnosti jedná o prostor „Normální" nebo „Abnormální". Pro určené vnější vlivy budou určeny technické požadavky ČSN 33 2000-5-51 ed.3+Z1-Z2 (7:2010).</p>`;
+            plainTextForCopy += `Pro každý posuzovaný objekt je vypracován samostatný list nazvaný jako „Zatřídění vnějších vlivů". Tento list je pojat jako tabulka, kde jsou vypsány všechny vlivy, tak jak je určuje ČSN 33 2000-5-51 ed.3+Z1-Z2 (7:2010), a ke každému vlivu je přiřazeno příslušné označení vlivu, včetně jeho třídy. Po tomto zařazení jednotlivých vlivů je vždy určeno, jestli se z hlediska bezpečnosti jedná o prostor „Normální" nebo „Abnormální". Pro určené vnější vlivy budou určeny technické požadavky ČSN 33 2000-5-51 ed.3+Z1-Z2 (7:2010).\n\n`;
+            protocolHtml += `<p class="text-sm mb-4">V úvodu každého „Zatřídění vnějších vlivů" je posuzovaný objekt (místnost) pojmenován, a také je zde uvedena jeho stručná charakteristika, co se například technologie nebo prováděných činností týká. Také jsou zde specifikovány nejdůležitější vnější vlivy, které se v posuzovaném prostoru vyskytují.</p>`;
+            plainTextForCopy += `V úvodu každého „Zatřídění vnějších vlivů" je posuzovaný objekt (místnost) pojmenován, a také je zde uvedena jeho stručná charakteristika, co se například technologie nebo prováděných činností týká. Také jsou zde specifikovány nejdůležitější vnější vlivy, které se v posuzovaném prostoru vyskytují.\n\n`;
+            protocolHtml += `<p class="text-sm mb-4">K určení vnějších vlivů a nebezpečných prostorů se vyjadřovali všichni členové komise, tak jak jsou uvedeni v bodě „B" tohoto protokolu.</p>`;
+            plainTextForCopy += `K určení vnějších vlivů a nebezpečných prostorů se vyjadřovali všichni členové komise, tak jak jsou uvedeni v bodě „B" tohoto protokolu.\n\n`;
+
+
+            // --- B. Složení komise ---
+            if (data.commissionChairman || data.commissionMembers) {
+                protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">B. Složení komise:</h3>`;
+                plainTextForCopy += "B. Složení komise:\n";
+                if (data.commissionChairman) {
+                    protocolHtml += `<p class="text-sm mb-1"><strong>Předseda komise:</strong> ${data.commissionChairman}</p>`;
+                    plainTextForCopy += `Předseda komise: ${data.commissionChairman}\n`;
+                }
+                if (data.commissionMembers) {
+                    protocolHtml += `<p class="text-sm mb-4"><strong>Členové komise:</strong> ${data.commissionMembers}</p>`;
+                    plainTextForCopy += `Členové komise: ${data.commissionMembers}\n\n`;
+                }
+            }
+
+            // --- C. Podkladová dokumentace ---
+            if (data.underlyingDocumentation) {
+                protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">C. Podkladová dokumentace:</h3>`;
+                plainTextForCopy += "C. Podkladová dokumentace:\n";
+                protocolHtml += `<div class="text-sm mb-4">${data.underlyingDocumentation.replace(/\n/g, '<br>')}</div>`;
+                plainTextForCopy += `${data.underlyingDocumentation}\n\n`;
+            }
+
+            // --- D. Použité technické předpisy a normy ---
+            if (data.technicalRegulations) {
+                protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">D. Použité technické předpisy a normy:</h3>`;
+                plainTextForCopy += "D. Použité technické předpisy a normy:\n";
+                protocolHtml += `<div class="text-sm mb-4">${data.technicalRegulations.replace(/\n/g, '<br>')}</div>`;
+                plainTextForCopy += `${data.technicalRegulations}\n\n`;
+            }
+
+            // --- E. Vstupní informace - technické údaje o zařízení (Seznam místností a prováděné činnosti) ---
+            protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">E. Vstupní informace - technické údaje o zařízení (Seznam místností a prováděné činnosti):</h3>`;
+            plainTextForCopy += "E. Vstupní informace - technické údaje o zařízení (Seznam místností a prováděné činnosti):\n";
+            data.rooms.forEach((roomData, i) => {
+                protocolHtml += `<p class="text-sm mb-1"><strong>Místnost ${i + 1}:</strong> ${roomData.description || 'Nezadáno'}</p>`;
+                plainTextForCopy += `Místnost ${i + 1}: ${roomData.description || 'Nezadáno'}\n`;
+            });
+            protocolHtml += `<div class="text-sm mt-4">`;
+            if (data.selectedWiringSystems.length > 0) {
+                protocolHtml += `<p><strong>Popis použitých typů vedení a způsobů uložení (dle čl. 521 a příl. A.52.3):</strong><br>${data.selectedWiringSystems.join(', ')}</p>`;
+                plainTextForCopy += `\nPopis použitých typů vedení a způsobů uložení (dle čl. 521 a příl. A.52.3):\n${data.selectedWiringSystems.join(', ')}\n`;
+            }
+            if (data.additionalNotes) {
+                protocolHtml += `<p><strong>Doplňující poznámky a obecná shoda s dalšími požadavky normy:</strong><br>${data.additionalNotes.replace(/\n/g, '<br>')}</p>`;
+                plainTextForCopy += `\nDoplňující poznámky a obecná shoda s dalšími požadavky normy:\n${data.additionalNotes}\n`;
+            }
+            protocolHtml += `</div>`;
+            plainTextForCopy += "\n";
+
+            // --- F. Určení vnějších vlivů (detailní tabulky) ---
+            protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">F. Určení vnějších vlivů:</h3>`;
+            plainTextForCopy += "F. Určení vnějších vlivů:\n";
+
             if (isNaN(data.numRooms) || data.numRooms < 1) {
                 protocolHtml += `<p>Nebyly zadány žádné místnosti.</p>`;
                 plainTextForCopy += "Nebyly zadány žádné místnosti.\n";
             } else {
-                protocolHtml += `<table><thead><tr><th>Číslo</th><th>Popis místnosti</th><th>Vnější vlivy</th></tr></thead><tbody>`;
                 data.rooms.forEach((roomData, i) => {
-                    let influencesOutput = roomData.selectedInfluences.length > 0 
-                        ? roomData.selectedInfluences.join(', ')
-                        : "Nebyly zadány žádné specifické vnější vlivy.";
-                    if (roomData.selectedInfluences.length > 0) roomData.selectedInfluences.forEach(inf => allSelectedUniqueInfluences.add(inf));
-                    if (roomData.noInfluencesChecked) roomsExplicitlyMarkedNoInfluences.push(roomData.description);
+                    protocolHtml += `<h4 class="text-md font-semibold text-gray-700 mt-4 mb-2">Objekt/místnost: ${data.buildingHeader || 'Nezadáno'}/${roomData.description || `Místnost ${i + 1}`}</h4>`;
+                    plainTextForCopy += `\nObjekt/místnost: ${data.buildingHeader || 'Nezadáno'}/${roomData.description || `Místnost ${i + 1}`}\n`;
+
+                    const isRoomNormalOverall = roomData.noInfluencesChecked || Object.values(roomData.selectedInfluenceCodes).every(code => detailedInfluences[code] && detailedInfluences[code].isNormal);
+                    const roomStatusText = isRoomNormalOverall ? "NORMÁLNÍ" : "ABNORMÁLNÍ";
+                    protocolHtml += `<p class="text-sm mb-2"><strong>Prostor:</strong> ${roomStatusText}</p>`;
+                    plainTextForCopy += `Prostor: ${roomStatusText}\n`;
+
+                    protocolHtml += `<p class="text-sm mb-2"><strong>Popis činnosti:</strong> Jedná se o prostory, kde se vyskytují VV, jejichž působení na elektrická zařízení ${isRoomNormalOverall ? 'nemají' : 'mají'} vliv na bezpečnost provozu a mohou se zde používat materiály a zařízení u kterých výrobce provedl zkoušky dle platných výrobkových norem potvrzujících bezpečnost těchto EZ při obvyklém a zamýšleném používání laiky.</p>`;
+                    plainTextForCopy += `Popis činnosti: Jedná se o prostory, kde se vyskytují VV, jejichž působení na elektrická zařízení ${isRoomNormalOverall ? 'nemají' : 'mají'} vliv na bezpečnost provozu a mohou se zde používat materiály a zařízení u kterých výrobce provedl zkoušky dle platných výrobkových norem potvrzujících bezpečnost těchto EZ při obvyklém a zamýšleném používání laiky.\n`;
+
+                    protocolHtml += `<p class="text-sm mb-4"><strong>Opatření:</strong> Působení těchto VV ${isRoomNormalOverall ? 'nevyžaduje' : 'vyžaduje'} realizaci doplňkových nebo zvl. ochranných opatření ${isRoomNormalOverall ? '' : 'dle požadavků uvedených v bodu „H" tohoto protokolu'}.</p>`;
+                    plainTextForCopy += `Opatření: Působení těchto VV ${isRoomNormalOverall ? 'nevyžaduje' : 'vyžaduje'} realizaci doplňkových nebo zvl. ochranných opatření ${isRoomNormalOverall ? '' : 'dle požadavků uvedených v bodu „H" tohoto protokolu'}.\n\n`;
+
+
+                    protocolHtml += `<table><thead><tr><th>Seznam vnějších vlivů</th><th>Popis vlivů</th><th>Označení</th><th>Normální</th><th>Abnormál</th><th>Osvědč. TIČR ANO</th><th>Opatření</th></tr></thead><tbody>`;
                     
-                    protocolHtml += `<tr><td>${i + 1}.</td><td>${roomData.description || 'Nezadáno'}</td><td>${influencesOutput}</td></tr>`;
-                    plainTextForCopy += `${i + 1}. Popis: ${roomData.description || 'Nezadáno'}\n   Vlivy: ${influencesOutput}\n\n`;
+                    influenceCategoriesForDropdowns.forEach(category => {
+                        const influenceCode = roomData.selectedInfluenceCodes[category.categoryCode];
+                        const detail = detailedInfluences[influenceCode];
+                        
+                        if (detail) {
+                            const normalX = detail.isNormal ? 'X' : '';
+                            const abnormalX = detail.isNormal ? '' : 'X';
+                            const opatreniText = detail.isNormal ? 'NE' : (detail.opatreniRef ? 'Viz.bod H' : 'NE'); 
+                            
+                            protocolHtml += `<tr>
+                                <td>${category.label.split(' ')[0]}</td>
+                                <td>${detail.description}</td>
+                                <td>${influenceCode}</td>
+                                <td>${normalX}</td>
+                                <td>${abnormalX}</td>
+                                <td>NE</td> 
+                                <td>${opatreniText}</td>
+                            </tr>`;
+                            if (!detail.isNormal && detail.opatreniRef) {
+                                uniqueOpatreniRefs.add(detail.opatreniRef); 
+                            }
+                        }
+                    });
+                    protocolHtml += `</tbody></table>`;
+
+                    // Removed roomsWithIpRatings push here.
                 });
-                protocolHtml += `</tbody></table>`;
             }
 
-            // --- Signature & Explanations ---
-            if (allSelectedUniqueInfluences.size > 0) {
-                protocolHtml += `<div class="mt-8 pt-4 border-t border-gray-300"><h3 class="text-lg font-bold text-gray-800 mb-3 text-center">Vysvětlivky k vnějším vlivům</h3><ul class="list-disc ml-6 text-sm">`;
-                plainTextForCopy += "\n--- VYSVĚTLIVKY K VNĚJŠÍM VLIVŮM ---\n";
-                allSelectedUniqueInfluences.forEach(key => {
-                    const detail = influenceDetails[key];
-                    if (detail) {
-                        protocolHtml += `<li><strong>${key}</strong> (Čl. ${detail.article}): ${detail.explanation}</li>`;
-                        plainTextForCopy += `- ${key} (Čl. ${detail.article}): ${detail.explanation}\n`;
+            // --- G. Stanovení termínů pravidelných revizí ---
+            if (data.revisionTerms) {
+                protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">G. Stanovení termínů pravidelných revizí:</h3>`;
+                plainTextForCopy += "\nG. Stanovení termínů pravidelných revizí:\n";
+                protocolHtml += `<div class="text-sm mb-4">${data.revisionTerms.replace(/\n/g, '<br>')}</div>`;
+                plainTextForCopy += `${data.revisionTerms}\n\n`;
+            }
+
+            // --- H. Technická opatření ---
+            if (uniqueOpatreniRefs.size > 0) {
+                protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">H. Technická opatření:</h3>`;
+                plainTextForCopy += "H. Technická opatření:\n";
+                let opatreniCounter = 1;
+                // Sort the measures by their original numbering in the `technicalMeasures` object
+                const sortedOpatreniRefs = Array.from(uniqueOpatreniRefs).sort((a, b) => {
+                    const numA = parseInt(technicalMeasures[a].match(/^\d+/));
+                    const numB = parseInt(technicalMeasures[b].match(/^\d+/));
+                    return numA - numB;
+                });
+
+                sortedOpatreniRefs.forEach(ref => {
+                    const measureText = technicalMeasures[ref];
+                    if (measureText) {
+                        // Replace the numbered prefix from the technicalMeasures string, as we re-number them here
+                        const cleanMeasureText = measureText.replace(/^\d+\.\s*/, '');
+                        protocolHtml += `<p class="text-sm mb-2"><strong>${opatreniCounter}.</strong> ${cleanMeasureText.replace(/\n/g, '<br>')}</p>`;
+                        plainTextForCopy += `${opatreniCounter}. ${cleanMeasureText}\n\n`;
+                        opatreniCounter++;
                     }
                 });
-                protocolHtml += `</ul></div>`;
+                protocolHtml += `<p class="text-sm mt-4">Poznámka: Vyberou se pouze opatření dle aktuálních vnějších vlivů.</p>`;
+                plainTextForCopy += "Poznámka: Vyberou se pouze opatření dle aktuálních vnějších vlivů.\n\n";
             }
-            protocolHtml += `<div class="mt-8 pt-4 border-t border-gray-300 text-center"><p class="mb-4">_________________________</p><p>Podpis</p></div>`;
-            plainTextForCopy += "\n\n_________________________\nPodpis\n";
+
+            // Removed section J for IP recommendations.
+
+            // --- I. Rozhodnutí komise --- (Changed from K to I)
+            if (data.commissionDecision) {
+                protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">I. Rozhodnutí komise:</h3>`;
+                plainTextForCopy += "\nI. Rozhodnutí komise:\n";
+                protocolHtml += `<p class="text-sm mb-4">${data.commissionDecision.replace(/\n/g, '<br>')}</p>`;
+                plainTextForCopy += `${data.commissionDecision}\n\n`;
+            }
+
+            // --- Signature ---
+            protocolHtml += `<div class="mt-8 pt-4 border-t border-gray-300 text-center text-sm">`;
+            plainTextForCopy += "_________________________\n"; 
+            if (data.preparedBy) {
+                protocolHtml += `<p class="mb-1">Zpracoval: ${data.preparedBy}</p>`;
+                plainTextForCopy += `Zpracoval: ${data.preparedBy}\n`;
+            }
+            protocolHtml += `<p class="mb-1">Dne: ${data.date || 'Nezadáno'}</p>`;
+            plainTextForCopy += `Dne: ${data.date || 'Nezadáno'}\n`;
+            protocolHtml += `<p class="mb-4">Za správnost vyhotovení: ${data.preparedBy || 'Nezadáno'}</p>`; 
+            plainTextForCopy += `Za správnost vyhotovení: ${data.preparedBy || 'Nezadáno'}\n\n`;
+            protocolHtml += `<p class="mb-4">_________________________</p><p>Podpis</p></div>`;
+            plainTextForCopy += "_________________________\nPodpis\n";
             
             // Store content for copying
             protocolOutputHtmlContent = protocolHtml;
@@ -673,6 +1490,12 @@
             preparedByInput.value = '';
             clientInput.value = '';
             buildingHeaderInput.value = '';
+            commissionChairmanInput.value = '';
+            commissionMembersInput.value = '';
+            underlyingDocumentationInput.value = '';
+            technicalRegulationsInput.value = '';
+            revisionTermsInput.value = '';
+            commissionDecisionInput.value = '';
             additionalNotesInput.value = '';
             Array.from(wiringSystemSelect.options).forEach(option => option.selected = false);
             numRoomsInput.value = 1;
@@ -727,16 +1550,34 @@
         generateProtocolBtn.addEventListener('click', generateProtocol);
         resetAppBtn.addEventListener('click', resetApplication);
         saveProtocolBtn.addEventListener('click', saveProtocol);
+        
+        // Event listener to show the modal when "Načíst protokol" is clicked
         loadProtocolBtn.addEventListener('click', () => {
-             // Simplified load prompt for better UX
-            const currentName = protocolNameInput.value.trim();
-            const protocolNameToLoad = prompt("Zadejte název protokolu k načtení:", currentName);
-            if (protocolNameToLoad) {
-                // Manually set the name input to what the user wants to load, then trigger load
-                protocolNameInput.value = protocolNameToLoad; 
-                loadProtocol();
+            loadProtocolModal.classList.remove('hidden');
+            loadProtocolNameInput.value = protocolNameInput.value.trim(); // Pre-fill with generated name
+            loadModalMessage.classList.add('hidden'); // Clear previous message
+            loadProtocolNameInput.focus(); // Focus input for immediate typing
+        });
+
+        // Event listener for confirming load in modal
+        confirmLoadProtocolBtn.addEventListener('click', () => {
+            const nameToLoad = loadProtocolNameInput.value.trim();
+            loadProtocol(nameToLoad);
+        });
+
+        // Event listener for cancelling load in modal
+        cancelLoadProtocolBtn.addEventListener('click', () => {
+            loadProtocolModal.classList.add('hidden');
+        });
+
+        // Allow pressing Enter key in the modal to confirm load
+        loadProtocolNameInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent form submission
+                confirmLoadProtocolBtn.click();
             }
         });
+
         dateInput.addEventListener('input', updateProtocolNameInput);
         buildingHeaderInput.addEventListener('input', updateProtocolNameInput);
 
