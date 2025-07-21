@@ -268,23 +268,42 @@
     <script type="module">
         // Firebase imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase setup variables (provided by Canvas environment)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // These are provided by the Canvas environment. When deploying to GitHub Pages,
+        // you will need to replace these with your actual Firebase project configuration.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; // Replace 'default-app-id' with your actual app ID if needed
         const firebaseConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
         let firebaseConfig = {};
         try {
             firebaseConfig = JSON.parse(firebaseConfigRaw);
         } catch (e) {
-            console.error("Failed to parse Firebase config:", e);
+            console.error("Failed to parse Firebase config from Canvas environment:", e);
+        }
+
+        // If firebaseConfig is empty (e.g., when running outside Canvas), provide a placeholder
+        // YOU MUST REPLACE THESE PLACEHOLDER VALUES WITH YOUR ACTUAL FIREBASE PROJECT CONFIGURATION
+        // Go to your Firebase project settings -> "Your apps" -> "Web" -> "Config"
+        if (Object.keys(firebaseConfig).length === 0 || !firebaseConfig.apiKey) {
+            firebaseConfig = {
+                apiKey: "YOUR_API_KEY", // Replace with your actual API Key
+                authDomain: "YOUR_PROJECT_ID.firebaseapp.com", // Replace with your actual Auth Domain
+                projectId: "YOUR_PROJECT_ID", // Replace with your actual Project ID
+                storageBucket: "YOUR_PROJECT_ID.appspot.com", // Replace with your actual Storage Bucket
+                messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // Replace with your actual Messaging Sender ID
+                appId: "YOUR_APP_ID", // Replace with your actual App ID
+                measurementId: "YOUR_MEASUREMENT_ID" // Replace with your actual Measurement ID (optional)
+            };
+            console.warn("Firebase configuration was not provided by the Canvas environment or was invalid. Using placeholder config. Please update 'firebaseConfig' in the script with your actual Firebase project details for save/load functionality to work on GitHub Pages.");
         }
         
         let app;
         let db = null;
         let auth = null;
         let userId = null;
+        let isFirebaseReady = false; // Track Firebase initialization status
 
         // DOM Elements
         const dateInput = document.getElementById('dateInput');
@@ -323,40 +342,50 @@
         let protocolOutputPlainContent = '';
 
         // Firebase Initialization and Authentication
-        function initializeFirebase() {
-            if (Object.keys(firebaseConfig).length > 0 && firebaseConfig.apiKey) {
+        async function initializeFirebase() {
+            if (firebaseConfig.apiKey && firebaseConfig.projectId) {
                 try {
                     app = initializeApp(firebaseConfig);
                     db = getFirestore(app);
                     auth = getAuth(app);
 
-                    onAuthStateChanged(auth, async (user) => {
-                        if (user) {
-                            userId = user.uid;
-                            console.log("Authenticated with user ID:", userId);
-                        } else {
-                            console.log("No user signed in, signing in anonymously...");
-                            try {
-                                const anonymousUser = await signInAnonymously(auth);
-                                userId = anonymousUser.user.uid;
-                                console.log("Signed in anonymously with user ID:", userId);
-                            } catch (error) {
-                                console.error("Anonymous sign-in failed:", error);
-                                storageMessage.textContent = "Chyba přihlášení, ukládání/načítání nebude fungovat.";
-                                storageMessage.style.color = 'red';
-                            }
+                    // Try to sign in with Canvas provided token first
+                    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                    if (initialAuthToken) {
+                        try {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                            userId = auth.currentUser.uid;
+                            console.log("Authenticated with Canvas token. User ID:", userId);
+                        } catch (error) {
+                            console.warn("Canvas token sign-in failed, attempting anonymous sign-in:", error);
+                            await signInAnonymously(auth);
+                            userId = auth.currentUser.uid;
+                            console.log("Signed in anonymously after Canvas token failure. User ID:", userId);
                         }
-                    });
+                    } else {
+                        // If no Canvas token, sign in anonymously
+                        await signInAnonymously(auth);
+                        userId = auth.currentUser.uid;
+                        console.log("Signed in anonymously. User ID:", userId);
+                    }
+                    isFirebaseReady = true;
+                    storageMessage.textContent = "Databáze připravena. Ukládání/načítání je funkční.";
+                    storageMessage.style.color = 'green';
+                    storageMessage.classList.remove('hidden');
+                    saveProtocolBtn.disabled = false;
+                    loadProtocolBtn.disabled = false;
+
                 } catch (e) {
-                    console.error("Firebase initialization failed:", e);
-                    storageMessage.textContent = "Chyba inicializace Firebase. Funkce ukládání/načítání nemusí fungovat.";
+                    console.error("Firebase initialization or authentication failed:", e);
+                    storageMessage.textContent = "Chyba inicializace Firebase. Funkce ukládání/načítání nemusí fungovat. Zkontrolujte konzoli pro detaily.";
                     storageMessage.style.color = 'red';
+                    storageMessage.classList.remove('hidden');
                     saveProtocolBtn.disabled = true;
                     loadProtocolBtn.disabled = true;
                 }
             } else {
-                console.warn("Firebase configuration is missing or invalid. Save/Load features will not be available.");
-                storageMessage.textContent = "Funkce ukládání/načítání (databáze) nejsou dostupné. Spusťte aplikaci online, nikoli z lokálního souboru.";
+                console.warn("Firebase configuration is incomplete. Save/Load features will not be available.");
+                storageMessage.textContent = "Funkce ukládání/načítání (databáze) nejsou dostupné. Prosím, doplňte své Firebase konfigurační údaje do kódu aplikace.";
                 storageMessage.style.color = 'orange';
                 storageMessage.classList.remove('hidden');
                 saveProtocolBtn.disabled = true;
@@ -1058,8 +1087,8 @@
          * Saves the current protocol data to Firestore.
          */
         async function saveProtocol() {
-            if (!db || !userId) {
-                storageMessage.textContent = "Chyba: Databáze není připravena.";
+            if (!db || !userId || !isFirebaseReady) {
+                storageMessage.textContent = "Chyba: Databáze není připravena nebo přihlášena.";
                 storageMessage.style.color = 'red';
                 return;
             }
@@ -1085,8 +1114,8 @@
          * Loads a protocol from Firestore.
          */
         async function loadProtocol(protocolName) {
-            if (!db || !userId) {
-                loadModalMessage.textContent = "Chyba: Databáze není připravena.";
+            if (!db || !userId || !isFirebaseReady) {
+                loadModalMessage.textContent = "Chyba: Databáze není připravena nebo přihlášena.";
                 loadModalMessage.style.color = 'red';
                 loadModalMessage.classList.remove('hidden');
                 return;
