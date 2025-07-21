@@ -367,7 +367,6 @@
         // Detailed influence data from ČSN 33 2000-5-51 ed.3 (Table ZA.1 and ZA.1N)
         // isNormal indicates if the influence code is considered "normal" by default in the context of the sample protocol.
         // opatreniRef links to the `technicalMeasures` object for detailed explanations.
-        // ipSolid and ipWater are added for IP rating calculation based on ČSN EN 60529
         const detailedInfluences = {
             "AA1": { category: "AA", description: "Okolní teplota: -60°C až +5°C", article: "ZA.1", isNormal: false, opatreniRef: "AA_AB_Opatreni" },
             "AA2": { category: "AA", description: "Okolní teplota: -40°C až +5°C", article: "ZA.1", isNormal: false, opatreniRef: "AA_AB_Opatreni" },
@@ -390,21 +389,21 @@
             "AC1": { category: "AC", description: "Nadmořská výška: ≤ 2000 m", article: "ZA.1", isNormal: true },
             "AC2": { category: "AC", description: "Nadmořská výška: > 2000 m", article: "ZA.1", isNormal: false, opatreniRef: "AC_Opatreni" },
 
-            "AD1": { category: "AD", description: "Voda: Zanedbatelná", article: "ZA.1", isNormal: true, ipWater: 0 },
-            "AD2": { category: "AD", description: "Voda: Možnost padajících kapek", article: "ZA.1", isNormal: false, opatreniRef: "AD_Opatreni_Voda", ipWater: 2 }, 
-            "AD3": { category: "AD", description: "Voda: Vodní tříšť", article: "ZA.1", isNormal: false, opatreniRef: "AD_Opatreni_Voda", ipWater: 3 },
-            "AD4": { category: "AD", description: "Voda: Stříkající voda", article: "ZA.1", isNormal: false, opatreniRef: "AD_Opatreni_Strikajici", ipWater: 4 }, 
-            "AD5": { category: "AD", description: "Voda: Tryskající voda", article: "ZA.1", isNormal: false, opatreniRef: "AD_Opatreni_Voda", ipWater: 5 },
-            "AD6": { category: "AD", description: "Voda: Vlny", article: "ZA.1", isNormal: false, opatreniRef: "AD_Opatreni_Voda", ipWater: 6 },
-            "AD7": { category: "AD", description: "Voda: Mělké ponoření", article: "ZA.1", isNormal: false, opatreniRef: "AD_Opatreni_Voda", ipWater: 7 },
-            "AD8": { category: "AD", description: "Voda: Hluboké ponoření", article: "ZA.1", isNormal: false, opatreniRef: "AD_Opatreni_Voda", ipWater: 8 },
+            "AD1": { category: "AD", description: "Voda: Zanedbatelná", article: "ZA.1", isNormal: true },
+            "AD2": { category: "AD", description: "Voda: Možnost padajících kapek", article: "ZA.1", isNormal: false, opatreniRef: "AD_Opatreni_Voda" }, 
+            "AD3": { category: "AD", description: "Voda: Vodní tříšť", article: "ZA.1", isNormal: false, opatreniRef: "AD_Opatreni_Voda" },
+            "AD4": { category: "AD", description: "Voda: Stříkající voda", article: "ZA.1", isNormal: false, opatreniRef: "AD_Opatreni_Strikajici" }, 
+            "AD5": { category: "AD", description: "Voda: Tryskající voda", article: "ZA.1", isNormal: false, opatreniRef: "AD_Opatreni_Voda" },
+            "AD6": { category: "AD", description: "Voda: Vlny", article: "ZA.1", isNormal: false, opatreniRef: "AD_Opatreni_Voda" },
+            "AD7": { category: "AD", description: "Voda: Mělké ponoření", article: "ZA.1", isNormal: false, opatreniRef: "AD_Opatreni_Voda" },
+            "AD8": { category: "AD", description: "Voda: Hluboké ponoření", article: "ZA.1", isNormal: false, opatreniRef: "AD_Opatreni_Voda" },
 
-            "AE1": { category: "AE", description: "Cizí pevná tělesa: Zanedbatelná", article: "ZA.1", isNormal: true, ipSolid: 0 },
-            "AE2": { category: "AE", description: "Cizí pevná tělesa: Malé předměty (2,5 mm)", article: "ZA.1", isNormal: false, opatreniRef: "AE_Opatreni", ipSolid: 3 },
-            "AE3": { category: "AE", description: "Cizí pevná tělesa: Velmi malé předměty (1 mm)", article: "ZA.1", isNormal: false, opatreniRef: "AE_Opatreni", ipSolid: 4 },
-            "AE4": { category: "AE", description: "Cizí pevná tělesa: Lehká prašnost", article: "ZA.1", isNormal: false, opatreniRef: "AE_Opatreni", ipSolid: 5 },
-            "AE5": { category: "AE", description: "Cizí pevná tělesa: Střední prašnost", article: "ZA.1", isNormal: false, opatreniRef: "AE_Opatreni", ipSolid: 6 }, 
-            "AE6": { category: "AE", description: "Cizí pevná tělesa: Silná prašnost", article: "ZA.1", isNormal: false, opatreniRef: "AE_Opatreni", ipSolid: 6 },
+            "AE1": { category: "AE", description: "Cizí pevná tělesa: Zanedbatelná", article: "ZA.1", isNormal: true },
+            "AE2": { category: "AE", description: "Cizí pevná tělesa: Malé předměty (2,5 mm)", article: "ZA.1", isNormal: false, opatreniRef: "AE_Opatreni" },
+            "AE3": { category: "AE", description: "Cizí pevná tělesa: Velmi malé předměty (1 mm)", article: "ZA.1", isNormal: false, opatreniRef: "AE_Opatreni" },
+            "AE4": { category: "AE", description: "Cizí pevná tělesa: Lehká prašnost", article: "ZA.1", isNormal: false, opatreniRef: "AE_Opatreni" },
+            "AE5": { category: "AE", description: "Cizí pevná tělesa: Střední prašnost", article: "ZA.1", isNormal: false, opatreniRef: "AE_Opatreni" }, 
+            "AE6": { category: "AE", description: "Cizí pevná tělesa: Silná prašnost", article: "ZA.1", isNormal: false, opatreniRef: "AE_Opatreni" },
 
             "AF1": { category: "AF", description: "Koroze/znečištění: Zanedbatelná", article: "ZA.1", isNormal: true },
             "AF2": { category: "AF", description: "Koroze/znečištění: Atmosférický", article: "ZA.1", isNormal: false, opatreniRef: "AF_Opatreni" },
@@ -701,7 +700,7 @@
                     { value: "AM9-1", text: "AM9-1: Elektrická pole: Zanedbatelná úroveň (Normální)" },
                     { value: "AM9-2", text: "AM9-2: Elektrická pole: Střední úroveň" },
                     { value: "AM9-3", text: "AM9-3: Elektrická pole: Vysoká úroveň" },
-                    { value: "AM9-4", text: "AM9-4: Elektrická pole: Velmi vysoká úroveň" },
+                    { value: "AM9-4", text: "AM9-4: Velmi vysoká úroveň" },
                     { value: "AM21", text: "AM21: Indukované oscilující napětí nebo proudy" },
                     { value: "AM22-1", text: "AM22-1: Šířené vedením (nanosekundy): Zanedbatelná úroveň (Normální)" },
                     { value: "AM22-2", text: "AM22-2: Šířené vedením (nanosekundy): Střední úroveň" },
@@ -1146,48 +1145,6 @@
         }
 
         /**
-         * Calculates the IP rating for a given room based on selected AD and AE influences.
-         * @param {object} roomData - Data for the current room.
-         * @returns {string} The calculated IP rating (e.g., "IP44") or "Nezadáno".
-         */
-        function calculateIpRating(roomData) {
-            const adCode = roomData.selectedInfluenceCodes.AD;
-            const aeCode = roomData.selectedInfluenceCodes.AE;
-
-            const adDetail = detailedInfluences[adCode];
-            const aeDetail = detailedInfluences[aeCode];
-
-            let ipSolid = 'X'; // Default to X if no specific solid protection
-            let ipWater = 'X'; // Default to X if no specific water protection
-
-            if (aeDetail && typeof aeDetail.ipSolid !== 'undefined') {
-                ipSolid = aeDetail.ipSolid;
-            } else if (roomData.noInfluencesChecked) {
-                // If "Normal space" is checked, default to IP0X for solids
-                ipSolid = 0;
-            }
-
-            if (adDetail && typeof adDetail.ipWater !== 'undefined') {
-                ipWater = adDetail.ipWater;
-            } else if (roomData.noInfluencesChecked) {
-                // If "Normal space" is checked, default to IPX0 for water
-                ipWater = 0;
-            }
-            
-            // Handle cases where IPX1/IPX2 are both possible for AD2, sample implies IPX2 for some cases.
-            // For simplicity, we'll use the higher IPX2 for AD2 if not explicitly defined otherwise.
-            if (adCode === "AD2" && ipWater === 0) { 
-                ipWater = 2; 
-            }
-
-
-            if (ipSolid === 'X' && ipWater === 'X') {
-                return "Nezadáno";
-            }
-            return `IP${ipSolid}${ipWater}`;
-        }
-
-        /**
          * Generates the protocol HTML and plain text output.
          */
         function generateProtocol() {
@@ -1196,7 +1153,7 @@
             let plainTextForCopy = "";
             const uniqueOpatreniRefs = new Set(); 
             const generatedProtocolNumber = protocolNameInput.value;
-            // Removed roomsWithIpRatings as section J is removed.
+            let currentSectionCounter = 0; // For dynamic section numbering
 
             // --- Main Protocol Title ---
             protocolHtml += `<h2 class="text-xl font-bold text-gray-800 my-4 text-center">PROTOKOL O URČENÍ VNĚJŠÍCH VLIVŮ<br>DLE ČSN 33 2000-5-51 ed.3 +Z1 + Z2 (7:2022)</h2>`;
@@ -1218,32 +1175,17 @@
             protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">OBSAH:</h3>`;
             plainTextForCopy += "OBSAH:\n";
             protocolHtml += `<ul class="list-none ml-4 text-sm">`;
-            plainTextForCopy += `A. Úvod\n`;
-            protocolHtml += `<li>A. Úvod</li>`;
-            if (data.commissionChairman || data.commissionMembers) {
-                protocolHtml += `<li>B. Složení komise</li>`;
-                plainTextForCopy += `B. Složení komise\n`;
-            }
-            if (data.underlyingDocumentation) {
-                protocolHtml += `<li>C. Podkladová dokumentace</li>`;
-                plainTextForCopy += `C. Podkladová dokumentace\n`;
-            }
-            if (data.technicalRegulations) {
-                protocolHtml += `<li>D. Použité technické předpisy a normy</li>`;
-                plainTextForCopy += `D. Použité technické předpisy a normy\n`;
-            }
-            // E. Vstupní informace - technické údaje o zařízení (this is covered by room descriptions)
-            protocolHtml += `<li>E. Vstupní informace - technické údaje o zařízení (Seznam místností a prováděné činnosti)</li>`;
-            plainTextForCopy += `E. Vstupní informace - technické údaje o zařízení (Seznam místností a prováděné činnosti)\n`;
-
-            protocolHtml += `<li>F. Určení vnějších vlivů (detailní tabulky)</li>`;
-            plainTextForCopy += `F. Určení vnějších vlivů (detailní tabulky)\n`;
-
-            if (data.revisionTerms) {
-                protocolHtml += `<li>G. Stanovení termínů pravidelných revizí</li>`;
-                plainTextForCopy += `G. Stanovení termínů pravidelných revizí\n`;
-            }
-            // Collect technical measures to see if section H is needed
+            
+            // Dynamically add content sections to OBSAH
+            const sections = [];
+            sections.push({ title: "Úvod", id: "A" });
+            if (data.commissionChairman || data.commissionMembers) sections.push({ title: "Složení komise", id: "B" });
+            if (data.underlyingDocumentation) sections.push({ title: "Podkladová dokumentace", id: "C" });
+            if (data.technicalRegulations) sections.push({ title: "Použité technické předpisy a normy", id: "D" });
+            sections.push({ title: "Vstupní informace - technické údaje o zařízení (Seznam místností a prováděné činnosti)", id: "E" });
+            sections.push({ title: "Určení vnějších vlivů (detailní tabulky)", id: "F" });
+            if (data.revisionTerms) sections.push({ title: "Stanovení termínů pravidelných revizí", id: "G" });
+            
             data.rooms.forEach(roomData => {
                 if (!roomData.noInfluencesChecked) {
                     for (const categoryCode in roomData.selectedInfluenceCodes) {
@@ -1255,17 +1197,14 @@
                     }
                 }
             });
-            if (uniqueOpatreniRefs.size > 0) {
-                protocolHtml += `<li>H. Technická opatření</li>`;
-                plainTextForCopy += `H. Technická opatření\n`;
-            }
-            // Section J for IP recommendations removed as per user request.
-            // If it were present, it would be here.
+            if (uniqueOpatreniRefs.size > 0) sections.push({ title: "Technická opatření", id: "H" });
+            if (data.commissionDecision) sections.push({ title: "Rozhodnutí komise", id: "I" });
 
-            if (data.commissionDecision) {
-                protocolHtml += `<li>I. Rozhodnutí komise</li>`; // Changed to I (was K)
-                plainTextForCopy += `I. Rozhodnutí komise\n`;
-            }
+            sections.forEach(section => {
+                protocolHtml += `<li>${section.id}. ${section.title}</li>`;
+                plainTextForCopy += `${section.id}. ${section.title}\n`;
+            });
+
             protocolHtml += `</ul>`;
             plainTextForCopy += "\n";
 
@@ -1273,10 +1212,11 @@
             plainTextForCopy += "---\n\n";
 
             // --- A. Úvod ---
-            protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">A. Úvod</h3>`;
-            plainTextForCopy += "A. Úvod\n";
-            protocolHtml += `<p class="text-sm mb-4">Zpracování tohoto „Protokolu o určení vnějších vlivů" bylo provedeno na základě objednávky zadavatele pro objekt ${data.buildingHeader || 'nezadáno'}.</p>`;
-            plainTextForCopy += `Zpracování tohoto „Protokolu o určení vnějších vlivů" bylo provedeno na základě objednávky zadavatele pro objekt ${data.buildingHeader || 'nezadáno'}.\n\n`;
+            currentSectionCounter = 0; // Reset counter for content sections
+            protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">${String.fromCharCode(65 + currentSectionCounter++)}. Úvod</h3>`;
+            plainTextForCopy += `${String.fromCharCode(65 + currentSectionCounter -1)}. Úvod\n`;
+            protocolHtml += `<p class="text-sm mb-4">Zpracování tohoto „Protokolu o určení vnějších vlivů" bylo provedeno na základě objednávky zadavatele pro objekt ${data.buildingHeader || 'nezadáno'}. Jedná se o vypracování protokolu o určení vnějších vlivů pro prostory objektu ${data.buildingHeader || 'nezadáno'}.</p>`;
+            plainTextForCopy += `Zpracování tohoto „Protokolu o určení vnějších vlivů" bylo provedeno na základě objednávky zadavatele pro objekt ${data.buildingHeader || 'nezadáno'}. Jedná se o vypracování protokolu o určení vnějších vlivů pro prostory objektu ${data.buildingHeader || 'nezadáno'}.\n\n`;
             protocolHtml += `<p class="text-sm mb-4">Protokol o určení vnějších vlivů je základní dokument pro přípravu projektové dokumentace, který zachycuje možná rizika a z nich vyplývající skutečnosti a zásadní technické požadavky na elektrickou instalaci. Vyhodnocení vnějších vlivů a z nich vyplývající technické požadavky na elektrickou instalaci stanovují kromě projektanta elektrické instalace i další specialisté z oborů, které mají na návrh a provoz elektrického instalace a elektrického zařízení navrhovaného objektu vliv. Zároveň je protokol o určení vnějších vlivů působících na elektrickou instalace nebo elektrické zařízení v době provedení ze základních dokumentů potřebných pro vedení revize (výchozí, pravidelné, mimořádné).</p>`;
             plainTextForCopy += `Protokol o určení vnějších vlivů je základní dokument pro přípravu projektové dokumentace, který zachycuje možná rizika a z nich vyplývající skutečnosti a zásadní technické požadavky na elektrickou instalaci. Vyhodnocení vnějších vlivů a z nich vyplývající technické požadavky na elektrickou instalaci stanovují kromě projektanta elektrické instalace i další specialisté z oborů, které mají na návrh a provoz elektrického instalace a elektrického zařízení navrhovaného objektu vliv. Zároveň je protokol o určení vnějších vlivů působících na elektrickou instalace nebo elektrické zařízení v době provedení ze základních dokumentů potřebných pro vedení revize (výchozí, pravidelné, mimořádné).\n\n`;
             protocolHtml += `<p class="text-sm mb-4">Samotné šetření v rámci „Určování vnějších vlivů" bylo rozděleno do několika etap: Fyzická prohlídka a Zpracování „Protokolu o určení vnějších vlivů". Protokol o určení vnějších vlivů je součástí projektové dokumentace skutečného provedení stavby. Tato dokumentace musí být po dobu životnosti zařízení, provozu či objektu uložena a je předkládána při periodických či jiných revizích elektrické instalace nebo elektrického zařízení.</p>`;
@@ -1293,8 +1233,8 @@
 
             // --- B. Složení komise ---
             if (data.commissionChairman || data.commissionMembers) {
-                protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">B. Složení komise:</h3>`;
-                plainTextForCopy += "B. Složení komise:\n";
+                protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">${String.fromCharCode(65 + currentSectionCounter++)}. Složení komise:</h3>`;
+                plainTextForCopy += `${String.fromCharCode(65 + currentSectionCounter -1)}. Složení komise:\n`;
                 if (data.commissionChairman) {
                     protocolHtml += `<p class="text-sm mb-1"><strong>Předseda komise:</strong> ${data.commissionChairman}</p>`;
                     plainTextForCopy += `Předseda komise: ${data.commissionChairman}\n`;
@@ -1307,23 +1247,23 @@
 
             // --- C. Podkladová dokumentace ---
             if (data.underlyingDocumentation) {
-                protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">C. Podkladová dokumentace:</h3>`;
-                plainTextForCopy += "C. Podkladová dokumentace:\n";
-                protocolHtml += `<div class="text-sm mb-4">${data.underlyingDocumentation.replace(/\n/g, '<br>')}</div>`;
+                protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">${String.fromCharCode(65 + currentSectionCounter++)}. Podkladová dokumentace:</h3>`;
+                plainTextForCopy += `${String.fromCharCode(65 + currentSectionCounter -1)}. Podkladová dokumentace:\n`;
+                protocolHtml += `<ul class="list-disc ml-6 text-sm mb-4">${data.underlyingDocumentation.split('\n').map(item => `<li>${item.trim()}</li>`).join('')}</ul>`;
                 plainTextForCopy += `${data.underlyingDocumentation}\n\n`;
             }
 
             // --- D. Použité technické předpisy a normy ---
             if (data.technicalRegulations) {
-                protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">D. Použité technické předpisy a normy:</h3>`;
-                plainTextForCopy += "D. Použité technické předpisy a normy:\n";
-                protocolHtml += `<div class="text-sm mb-4">${data.technicalRegulations.replace(/\n/g, '<br>')}</div>`;
+                protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">${String.fromCharCode(65 + currentSectionCounter++)}. Použité technické předpisy a normy:</h3>`;
+                plainTextForCopy += `${String.fromCharCode(65 + currentSectionCounter -1)}. Použité technické předpisy a normy:\n`;
+                protocolHtml += `<ul class="list-disc ml-6 text-sm mb-4">${data.technicalRegulations.split('\n').map(item => `<li>${item.trim()}</li>`).join('')}</ul>`;
                 plainTextForCopy += `${data.technicalRegulations}\n\n`;
             }
 
             // --- E. Vstupní informace - technické údaje o zařízení (Seznam místností a prováděné činnosti) ---
-            protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">E. Vstupní informace - technické údaje o zařízení (Seznam místností a prováděné činnosti):</h3>`;
-            plainTextForCopy += "E. Vstupní informace - technické údaje o zařízení (Seznam místností a prováděné činnosti):\n";
+            protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">${String.fromCharCode(65 + currentSectionCounter++)}. Vstupní informace - technické údaje o zařízení (Seznam místností a prováděné činnosti):</h3>`;
+            plainTextForCopy += `${String.fromCharCode(65 + currentSectionCounter -1)}. Vstupní informace - technické údaje o zařízení (Seznam místností a prováděné činnosti):\n`;
             data.rooms.forEach((roomData, i) => {
                 protocolHtml += `<p class="text-sm mb-1"><strong>Místnost ${i + 1}:</strong> ${roomData.description || 'Nezadáno'}</p>`;
                 plainTextForCopy += `Místnost ${i + 1}: ${roomData.description || 'Nezadáno'}\n`;
@@ -1341,8 +1281,8 @@
             plainTextForCopy += "\n";
 
             // --- F. Určení vnějších vlivů (detailní tabulky) ---
-            protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">F. Určení vnějších vlivů:</h3>`;
-            plainTextForCopy += "F. Určení vnějších vlivů:\n";
+            protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">${String.fromCharCode(65 + currentSectionCounter++)}. Určení vnějších vlivů:</h3>`;
+            plainTextForCopy += `${String.fromCharCode(65 + currentSectionCounter -1)}. Určení vnějších vlivů:\n`;
 
             if (isNaN(data.numRooms) || data.numRooms < 1) {
                 protocolHtml += `<p>Nebyly zadány žádné místnosti.</p>`;
@@ -1375,13 +1315,19 @@
                             const abnormalX = detail.isNormal ? '' : 'X';
                             const opatreniText = detail.isNormal ? 'NE' : (detail.opatreniRef ? 'Viz.bod H' : 'NE'); 
                             
+                            // Determine TIČR status: "ANO" if BC3 is selected for this room, else "NE"
+                            let ticrStatus = 'NE';
+                            if (roomData.selectedInfluenceCodes.BC === 'BC3') {
+                                ticrStatus = 'ANO';
+                            }
+
                             protocolHtml += `<tr>
                                 <td>${category.label.split(' ')[0]}</td>
                                 <td>${detail.description}</td>
                                 <td>${influenceCode}</td>
                                 <td>${normalX}</td>
                                 <td>${abnormalX}</td>
-                                <td>NE</td> 
+                                <td>${ticrStatus}</td> 
                                 <td>${opatreniText}</td>
                             </tr>`;
                             if (!detail.isNormal && detail.opatreniRef) {
@@ -1391,22 +1337,21 @@
                     });
                     protocolHtml += `</tbody></table>`;
 
-                    // Removed roomsWithIpRatings push here.
                 });
             }
 
             // --- G. Stanovení termínů pravidelných revizí ---
             if (data.revisionTerms) {
-                protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">G. Stanovení termínů pravidelných revizí:</h3>`;
-                plainTextForCopy += "\nG. Stanovení termínů pravidelných revizí:\n";
+                protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">${String.fromCharCode(65 + currentSectionCounter++)}. Stanovení termínů pravidelných revizí:</h3>`;
+                plainTextForCopy += `${String.fromCharCode(65 + currentSectionCounter -1)}. Stanovení termínů pravidelných revizí:\n`;
                 protocolHtml += `<div class="text-sm mb-4">${data.revisionTerms.replace(/\n/g, '<br>')}</div>`;
                 plainTextForCopy += `${data.revisionTerms}\n\n`;
             }
 
             // --- H. Technická opatření ---
             if (uniqueOpatreniRefs.size > 0) {
-                protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">H. Technická opatření:</h3>`;
-                plainTextForCopy += "H. Technická opatření:\n";
+                protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">${String.fromCharCode(65 + currentSectionCounter++)}. Technická opatření:</h3>`;
+                plainTextForCopy += `${String.fromCharCode(65 + currentSectionCounter -1)}. Technická opatření:\n`;
                 let opatreniCounter = 1;
                 // Sort the measures by their original numbering in the `technicalMeasures` object
                 const sortedOpatreniRefs = Array.from(uniqueOpatreniRefs).sort((a, b) => {
@@ -1429,12 +1374,10 @@
                 plainTextForCopy += "Poznámka: Vyberou se pouze opatření dle aktuálních vnějších vlivů.\n\n";
             }
 
-            // Removed section J for IP recommendations.
-
             // --- I. Rozhodnutí komise --- (Changed from K to I)
             if (data.commissionDecision) {
-                protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">I. Rozhodnutí komise:</h3>`;
-                plainTextForCopy += "\nI. Rozhodnutí komise:\n";
+                protocolHtml += `<h3 class="text-lg font-bold text-gray-800 mt-6 mb-3">${String.fromCharCode(65 + currentSectionCounter++)}. Rozhodnutí komise:</h3>`;
+                plainTextForCopy += `${String.fromCharCode(65 + currentSectionCounter -1)}. Rozhodnutí komise:\n`;
                 protocolHtml += `<p class="text-sm mb-4">${data.commissionDecision.replace(/\n/g, '<br>')}</p>`;
                 plainTextForCopy += `${data.commissionDecision}\n\n`;
             }
