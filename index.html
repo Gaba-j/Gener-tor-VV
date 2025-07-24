@@ -244,8 +244,16 @@
         <div id="loadProtocolModal" class="modal-overlay hidden">
             <div class="modal-content">
                 <h3 class="text-xl font-bold mb-4">Načíst protokol</h3>
-                <label for="loadProtocolNameInput" class="block text-gray-700 text-sm font-medium mb-2">Zadejte název protokolu:</label>
+                <label for="loadProtocolNameInput" class="block text-gray-700 text-sm font-medium mb-2">Zadejte název protokolu nebo vyberte ze seznamu:</label>
                 <input type="text" id="loadProtocolNameInput" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-base mb-4">
+                
+                <div id="savedProtocolsListContainer" class="max-h-40 overflow-y-auto border border-gray-200 rounded-md p-2 mb-4">
+                    <ul id="savedProtocolsList" class="text-left text-sm text-gray-700">
+                        <!-- Protocols will be loaded here -->
+                        <li class="text-gray-500">Načítám uložené protokoly...</li>
+                    </ul>
+                </div>
+
                 <div class="flex justify-center gap-4">
                     <button id="confirmLoadProtocolBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Načíst</button>
                     <button id="cancelLoadProtocolBtn" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg">Zrušit</button>
@@ -269,7 +277,7 @@
         // Firebase imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase setup variables (provided by Canvas environment)
         // These are provided by the Canvas environment. When deploying to GitHub Pages,
@@ -332,7 +340,9 @@
         const confirmLoadProtocolBtn = document.getElementById('confirmLoadProtocolBtn');
         const cancelLoadProtocolBtn = document.getElementById('cancelLoadProtocolBtn');
         const loadModalMessage = document.getElementById('loadModalMessage');
-        
+        const savedProtocolsList = document.getElementById('savedProtocolsList'); // New: List container
+        const savedProtocolsListContainer = document.getElementById('savedProtocolsListContainer'); // New: Wrapper for list, to toggle visibility
+
         // Variables to hold protocol content for copying
         let protocolOutputHtmlContent = '';
         let protocolOutputPlainContent = '';
@@ -553,6 +563,39 @@
             "CB2": { category: "CB", description: "Provedení budovy: Šíření požáru", article: "ZA.1", isNormal: false, opatreniRef: "CB_Opatreni_Sir_Pozaru" },
             "CB3": { category: "CB", description: "Provedení budovy: Posun", article: "ZA.1", isNormal: false, opatreniRef: "CB_Opatreni_Posun" },
             "CB4": { category: "CB", description: "Provedení budovy: Poddajné nebo nestabilní", article: "ZA.1", isNormal: false, opatreniRef: "CB_Opatreni_Poddajne" },
+        };
+
+        // Technical Measures (Opatření) - G. Technická opatření
+        // These texts are taken directly from the sample PDF, "G. Technická opatření" section.
+        const technicalMeasures = {
+            "BC_Opatreni": "1. Dotyk s potenciálem země (BC3):\nV případě častého a trvalého nebezpečí dotyku osob s potenciálem země je nutné provozovatelem zabezpečit, aby v případě provozu nemohlo dojít k situaci, že se osoby dostanou mezi dva různé potenciály, to znamená, že všechny vodivé (neživé) konstrukce musí být navzájem pospojovány (doplňkové a hlavní ochranné pospojování).",
+            "BA_Opatreni_Poucene": "2. Osoby poučené (BA4):\nOsoby poučené pracující samostatně, popřípadě pod dohledem či dozorem osob znalých dle NV 194/2022 Sb. Jedná se o práci v elektrotechnických pracovních prostorech.\nPoučení zabezpečuje provozovatel (zaměstnavatel) v souladu s požadavky zákona 250/2021 Sb. a NV 194/2022 Sb.",
+            "AD_Opatreni_Strikajici": "3. Stříkající voda (AD4):\nMožnost stříkání vody z libovolného směru. Elektrické zařízení musí odolávat působení vody, jíž je vystaveno. Instalované elektrické předměty musí odpovídat stupni ochrany krytem alespoň IPX4.",
+            "BE_Pozar_Kvapaliny": "4. Nebezpečí požáru hořlavých kapalin (BE2N3):\nElektrická zařízení musí být provedena tak, aby za svého předepsaného provozního stavu nemohla zapálit přítomné hořlavé kapaliny. Povrchové teploty elektrických zařízení nesmějí být vyšší než 120°C. Elektrické stroje a přístroje musí mít ochranu krytem alespoň IP43. Elektrické stroje a přístroje za provozu jiskřící (vypínače, jističe, komutátorové motory, atd.) musí být chráněny polohou nebo zvláštním krytem před politím nebo postřikem hořlavou kapalinou, nebo musí být provedeny se stupněm ochrany krytem alespoň IP54, popřípadě v nevýbušném závěru Exd IIB T4 v souladu s ČSN EN 60079. Svítidla, která by mohla být hořlavými kapalinami polita, musí být se stupněm ochrany krytem alespoň IP54, nebo v nevýbušném provedení Exd IIB T4 v souladu s ČSN EN 60079. Ostatní svítidla musí mít stupeň ochrany krytem alespoň IP43, nad těmito prostory alespoň IP22 (ČSN 33 2000-5-51 ed.3, tabulka ZA.1N).",
+            "BE_Pozar_Prachy": "5. Nebezpečí požáru hořlavých prachů (BE2N2):\nPodmínky pro elektrická zařízení s hořlavým prachem jsou určeny v ČSN EN 60079-14 ed.4.",
+            "BE_Vybuch_Prachy": "6. Nebezpečí výbuchu hořlavých prachů (BE3N1):", 
+            "BE_Vybuch_Plyn": "6. Nebezpečí výbuchu hořlavých par a plynů (BE3N2):\nVýroba nebo skladování výbušných látek, včetně výskytu výbušného prachu. Předpisy pro elektrická zařízení určená k použití ve výbušné atmosféře jsou určeny v ČSN EN 60079-14 ed.4.",
+            "AD_Opatreni_Voda": "7. Možnost padajících kapek (AD2), Tryskající voda (AD5):\nElektrické zařízení musí odolávat působení vody či jiné nehořlavé kapaliny, již je vystaveno. Umisťování hlavních rozváděčů v prostředí AD je zakázáno, pokud jejich umísťování v tomto prostředí pro specifické užití nepovoluje jiný elektrotechnický předpis. Podružné rozváděče se musí vždy umisťovat tak, aby ani rozváděče, ani jejich Přednostně se mají používat nástěnné rozváděče se stupněm ochrany krytem alespoň IPX2 (AD2) a IPX5 (AD5) nebo vyšším, z nevodivého, korozně odolného materiálu.",
+            "AF_Opatreni": "8. Výskyt korosivních nebo znečišťujících látek (AF2 Atmosférický, AF3 Občasný či příležitostný):\nPřítomnost korozivních znečišťujících látek je významný. Instalace nebo zařízení na břehu moře, v blízkosti průmyslových oblastí produkujících větší množství nečistot v atmosféře, jako jsou chemičky, cementárny. Tento typ znečištění vzniká produkcí brusných, nebo vodivých či nevodivých prachů. Občasné nebo příležitostné vystavení korozivním nebo znečišťujícím chemickým látkám při výrobě a užití těchto látek. Místa, kde se zachází s malými množstvími chemických produktů a kde tyto produkty mohou náhodně přijít do styku s elektrickým zařízením; tyto podmínky se mohou vyskytnout v laboratořích továren a jiných laboratořích a místech, ve kterých se užívají uhlovodíky (v garážích, v kotelnách a podobně). Ochrana proti korozi podle specifikace pro zařízení.",
+            "AA_AB_Opatreni": "10. Atmosférické podmínky (AB6 až AB8):\nKovové konstrukční materiály, pokud nejsou korozně odolné, musí mít vhodnou povrchovou ochranu. Minimální stupeň ochrany krytem elektrických strojů, přístrojů, svítidel a rozváděčů musí být alespoň IP 21. Rozváděče musí být chráněny proti kapající vodě (stříškou, zapuštěním do zdi a podobně) a tam, kde by mohly být zasaženy stříkající vodou, musí mít stupeň ochrany krytem odpovídající třídě vnějšího vlivu, nebo chráněny dodatečnou ochranou.",
+            "AG_AH_AJ_Opatreni": "11. Mechanické namáhání - rázy a vibrace (AG2, AH2):\nPři navrhování a stavbě elektrických zařízení se musí přihlédnout k výskytu, druhu a intenzitě otřesů (vibrací, chvění, nárazů atd.) působících na elektrická zařízení nebo na jejich podklady. Je nutno volit takové provedení, umístění a zejména uložení elektrických zařízení, aby vliv otřesů nemohl narušit správnou a spolehlivou funkci a bezpečnost zařízení. Elektrická zařízení musí mít konstrukci dostatečně odolnou proti vyskytujícím se otřesům. Vedení je nutno ukládat tak, aby otřesy nezpůsobovaly přídavné namáhání vodičů, zejména jader ve spojích. Doporučuje se používat vodiče se slaněnými měděnými jádry. Tuhé vodiče (pasy) se musí opatřit pružnými spojkami. Všechny šroubové spoje (např. šroubové svorky, upevňovací šrouby vík rámů apod.) musí být zajištěny proti samovolnému uvolnění, např. vhodnou podložkou (pérovou, pojistnou vějířovou, ozubenou, se závlačkou, apod.), nebo musí být opatřeny dvěma maticemi, nebo u menších velikostí spojů (do M4) zakápnutím matice barvou. Způsob zajištění je třeba volit podle druhu a velkosti zařízení. V důležitých případech se spoj ověřuje odpovídající zkouškou. Světelné zdroje musí být otřesu vzdorné. Zářivková svítidla musí mít objímky zajištěné proti samovolnému uvolnění. Svítidla se mají zavěšovat na pružné závěsy.",
+            // Placeholder for other potential measures not explicitly listed in the sample's G section but implied by the ZA.1N table.
+            "AC_Opatreni": "Zvláštní bezpečnostní opatření pro nadmořskou výšku (např. součinitelé s ohledem na nadmořskou výšku).",
+            "AE_Opatreni": "Ochrana proti vniknutí cizích pevných těles (odpovídající stupeň ochrany krytem IP).",
+            "AK_AL_Opatreni": "Ochrana proti pronikání hmyzu a drobných živočichů a biologicko-chemickým vlivům (min. IP44, hladké povrchy, ocelové trubky v utěsněné soustavě).",
+            "AM_Opatreni": "Zvláštní opatření pro elektromagnetickou kompatibilitu (např. filtry, stínění, separace, odolnost zařízení).",
+            "AN_Opatreni": "Vhodná opatření proti slunečnímu a ultrafialovému záření (materiály odolné proti UV, stínění, speciální nátěry).",
+            "AP_Opatreni": "Instalace s řádným ohledem na seizmická nebezpečí (důraz na upevnění a poddajnost spojení).",
+            "AQ_Opatreni": "Pokud je ochrana před bleskem důležitá, provede se v souladu se souborem EN 62305.",
+            "AR_AS_Opatreni": "Opatření proti poškození vedení vlivem větru a pohybu vzduchu (posuzovat ve spojení s vibracemi a mechanickým namáháním).",
+            "BA_Opatreni_Obecne": "Zajištění elektrického zařízení proti nebezpečnému dotyku a omezení povrchové teploty na přístupných částech elektrického zařízení dle způsobilosti osob.",
+            "BD_Opatreni": "Zohlednění podmínek evakuace osob v případě nebezpečí, což ovlivňuje volbu a instalaci vedení, zejména v únikových cestách a shromaždištích.",
+            "BE_Pozar_Opatreni_Obecne": "Zařízení je vyrobeno z materiálu, který zpomaluje šíření plamene. Provedou se takové úpravy, že podstatné oteplení nebo jiskra v elektrickém zařízení nemohou způsobit požár.",
+            "BE_Vybuch_Opatreni_Obecne": "Instalace musí být provedena tak, aby byly splněny zvláštní požadavky na ochranu v prostorách s nebezpečím výbuchu (dle souboru EN 60079).",
+            "CA_Opatreni": "Pro elektrická zařízení umístěná na hořlavých podkladech a v nich platí ČSN 33 2312 a ČSN 33 2000-4-482.",
+            "CB_Opatreni_Sir_Pozaru": "Zařízení je vyrobené z materiálu, který zpomaluje šíření požáru. Požární přepážky.",
+            "CB_Opatreni_Posun": "Vedení musí být zvolena a instalována s ohledem na možný posun konstrukce (např. dilatace) tak, aby vodiče a kabely nebyly vystaveny nadměrnému mechanickému namáhání.",
+            "CB_Opatreni_Poddajne": "Instalace, které mají být konstrukčně samonosné. Použití ohebných vedení."
         };
 
 
@@ -827,6 +870,44 @@
                 loadModalMessage.textContent = `Chyba při načítání: ${e.message}`;
                 loadModalMessage.style.color = 'red';
                 loadModalMessage.classList.remove('hidden');
+            }
+        }
+
+        /**
+         * Fetches and displays a list of saved protocols in the modal.
+         */
+        async function loadSavedProtocolsList() {
+            savedProtocolsList.innerHTML = '<li class="text-gray-500 text-center">Načítám uložené protokoly...</li>';
+            loadModalMessage.classList.add('hidden'); // Hide any previous load messages
+            
+            if (!db || !userId || !isFirebaseReady) {
+                savedProtocolsList.innerHTML = '<li class="text-red-500 text-center">Databáze není připravena.</li>';
+                return;
+            }
+
+            try {
+                const protocolsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/protocols`);
+                const querySnapshot = await getDocs(protocolsCollectionRef);
+                
+                savedProtocolsList.innerHTML = ''; // Clear loading message
+
+                if (querySnapshot.empty) {
+                    savedProtocolsList.innerHTML = '<li class="text-gray-500 text-center">Žádné protokoly nenalezeny.</li>';
+                } else {
+                    querySnapshot.forEach((doc) => {
+                        const li = document.createElement('li');
+                        li.textContent = doc.id;
+                        li.className = 'cursor-pointer hover:bg-blue-100 p-1 rounded-md';
+                        li.addEventListener('click', () => {
+                            loadProtocolNameInput.value = doc.id;
+                            loadModalMessage.classList.add('hidden'); // Clear message when selecting
+                        });
+                        savedProtocolsList.appendChild(li);
+                    });
+                }
+            } catch (e) {
+                console.error("Error loading protocols list:", e);
+                savedProtocolsList.innerHTML = `<li class="text-red-500 text-center">Chyba při načítání seznamu: ${e.message}</li>`;
             }
         }
 
@@ -1214,6 +1295,7 @@
             loadProtocolNameInput.value = protocolNameInput.value.trim(); // Pre-fill with generated name
             loadModalMessage.classList.add('hidden'); // Clear previous message
             loadProtocolNameInput.focus(); // Focus input for immediate typing
+            loadSavedProtocolsList(); // Load the list of protocols
         });
 
         // Event listener for confirming load in modal
