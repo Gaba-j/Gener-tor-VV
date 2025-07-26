@@ -274,25 +274,26 @@
         // Firebase setup variables (provided by Canvas environment)
         // These are provided by the Canvas environment. When deploying to GitHub Pages,
         // you will need to replace these with your actual Firebase project configuration.
-         const firebaseConfig = {
-              apiKey: "AIzaSyAHc9JlkGFdLDiyvoHLh-UZKl-WwIFUpsA",
-              authDomain: "generatorvv-34ed3.firebaseapp.com",
-              projectId: "generatorvv-34ed3",
-              storageBucket: "generatorvv-34ed3.firebasestorage.app",
-              messagingSenderId: "523482338825",
-              appId: "1:523482338825:web:e2f41775f75f8b6dad0ad8",
-              measurementId: "G-02V5Z0TPNB" // Toto je volitelné, pokud nechcete analytics
-            };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; // Replace 'default-app-id' with your actual app ID if needed
+        const firebaseConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
+        let firebaseConfig = {};
+        try {
+            firebaseConfig = JSON.parse(firebaseConfigRaw);
+        } catch (e) {
+            console.error("Failed to parse Firebase config from Canvas environment:", e);
+        }
 
-            // Definice appId pro Firestore cestu (používáme projectId pro jednoduchost a robustnost)
-            const appId = firebaseConfig.projectId;
-            
-            // Proměnné pro instanci Firebase aplikace
-            let app;
-            let db = null;
-            let auth = null;
-            let userId = null;
-            let isFirebaseReady = false; // Sleduje stav inicial
+        // YOUR FIREBASE CONFIGURATION - REPLACE WITH YOUR ACTUAL VALUES
+        // Go to your Firebase project settings -> "Your apps" -> "Web" -> "Config"
+        firebaseConfig = {
+            apiKey: "AIzaSyAHc9JlkGFdLDiyvoHLh-UZKl-WwIFUpsA",
+            authDomain: "generatorvv-34ed3.firebaseapp.com",
+            projectId: "generatorvv-34ed3",
+            storageBucket: "generatorvv-34ed3.firebasestorage.app",
+            messagingSenderId: "523482338825",
+            appId: "1:523482338825:web:e2f41775f75f8b6dad0ad8",
+            measurementId: "G-02V5Z0TPNB"
+        };
         
         let app;
         let db = null;
@@ -477,9 +478,9 @@
             "AM22-2": { category: "AM", description: "Šířené vedením, jednosměrně vedené v časovém měřítku nanosekund: Střední úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
             "AM22-3": { category: "AM", description: "Šířené vedením, jednosměrně vedené v časovém měřítku nanosekund: Vysoká úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
             "AM22-4": { category: "AM", description: "Šířené vedením, jednosměrně vedené v časovém měřítku nanosekund: Velmi vysoká úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
-            "AM23-1": { category: "AM", description: "Šířené vedením, jednosměrně vedené v časovém měřítku milisekund nebo mikrosekund: Kontrolovaná úroveň", article: "ZA.1", isNormal: true },
-            "AM23-2": { category: "AM", description: "Šířené vedením, jednosměrně vedené v časovém měřítku milisekund nebo mikrosekund: Střední úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
-            "AM23-3": { category: "AM", description: "Šířené vedením, jednosměrně vedené v časovém měřítku milisekund nebo mikrosekund: Vysoká úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM23-1": { category: "AM", description: "Šířené vedením (milisekundy/mikrosekundy): Kontrolovaná úroveň", article: "ZA.1", isNormal: true },
+            "AM23-2": { category: "AM", description: "Šířené vedením (milisekundy/mikrosekundy): Střední úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
+            "AM23-3": { category: "AM", description: "Šířené vedením (milisekundy/mikrosekundy): Vysoká úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
             "AM24-1": { category: "AM", description: "Oscilační přechodové jevy šířené vedením: Střední úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
             "AM24-2": { category: "AM", description: "Oscilační přechodové jevy šířené vedením: Vysoká úroveň", article: "ZA.1", isNormal: false, opatreniRef: "AM_Opatreni" },
             "AM25-1": { category: "AM", description: "Jevy vyzařované s vysokým kmitočtem: Zanedbatelná úroveň", article: "ZA.1", isNormal: true },
@@ -504,12 +505,12 @@
             "AQ2": { category: "AQ", description: "Blesková úroveň: Nepřímé ohrožení (Ng>2.5, Nk>25 bouřkových dní)", article: "ZA.1", isNormal: false, opatreniRef: "AQ_Opatreni" },
             "AQ3": { category: "AQ", description: "Blesková úroveň: Přímé ohrožení", article: "ZA.1", isNormal: false, opatreniRef: "AQ_Opatreni" },
 
-            "AR1": { category: "AR", description: "Pohyb vzduchu: Pomalý (Rychlost ≤1 m/s)", article: "ZA.1", isNormal: true },
-            "AR2": { category: "AR", description: "Pohyb vzduchu: Střední (1 m/s < rychlost ≤5 m/s)", article: "ZA.1", isNormal: false, opatreniRef: "AR_AS_Opatreni" },
-            "AR3": { category: "AR", description: "Pohyb vzduchu: Silný (5 m/s < rychlost ≤10 m/s)", article: "ZA.1", isNormal: false, opatreniRef: "AR_AS_Opatreni" },
+            "AR1": { category: "AR", description: "Pohyb vzduchu: Pomalý (≤1 m/s)", article: "ZA.1", isNormal: true },
+            "AR2": { category: "AR", description: "Pohyb vzduchu: Střední (>1-5 m/s)", article: "ZA.1", isNormal: false, opatreniRef: "AR_AS_Opatreni" },
+            "AR3": { category: "AR", description: "Pohyb vzduchu: Silný (>5-10 m/s)", article: "ZA.1", isNormal: false, opatreniRef: "AR_AS_Opatreni" },
 
-            "AS1": { category: "AS", description: "Vítr: Malý (Rychlost ≤20 m/s)", article: "ZA.1", isNormal: true },
-            "AS2": { category: "AS", description: "Vítr: Střední (20 m/s < rychlost ≤30 m/s)", article: "ZA.1", isNormal: false, opatreniRef: "AR_AS_Opatreni" },
+            "AS1": { category: "AS", description: "Vítr: Malý (≤20 m/s)", article: "ZA.1", isNormal: true },
+            "AS2": { category: "AS", description: "Vítr: Střední (>20-30 m/s)", article: "ZA.1", isNormal: false, opatreniRef: "AR_AS_Opatreni" },
             "AS3": { category: "AS", description: "Vítr: Silný (30 m/s < rychlost ≤50 m/s)", article: "ZA.1", isNormal: false, opatreniRef: "AR_AS_Opatreni" },
 
             // B - Využití (Usage)
@@ -709,39 +710,39 @@
                 influences: [
                     { value: "AM1-1", text: "AM1-1: Harmonické, meziharmonické: Kontrolovaná úroveň (Normální)" },
                     { value: "AM1-2", text: "AM1-2: Harmonické, meziharmonické: Normální úroveň" },
-                    { value: "AM1-3", text: "AM1-3: Harmonické, meziharmonické: Vysoká úroveň" },
+                    { value: "AM1-3", text: "AM1-3: Vysoká úroveň" },
                     { value: "AM2-1", text: "AM2-1: Signální napětí: Kontrolovaná úroveň (Normální)" },
                     { value: "AM2-2", text: "AM2-2: Signální napětí: Střední úroveň" },
-                    { value: "AM2-3", text: "AM2-3: Signální napětí: Vysoká úroveň" },
+                    { value: "AM2-3", text: "AM2-3: Vysoká úroveň" },
                     { value: "AM3-1", text: "AM3-1: Změny amplitudy napětí: Kontrolovaná úroveň (Normální)" },
-                    { value: "AM3-2", text: "AM3-2: Změny amplitudy napětí: Normální úroveň" },
+                    { value: "AM3-2", text: "AM3-2: Normální úroveň" },
                     { value: "AM4", text: "AM4: Neustálené napětí" },
                     { value: "AM5", text: "AM5: Změny kmitočtu" },
                     { value: "AM6", text: "AM6: Indukované napětí nízkého kmitočtu" },
                     { value: "AM7", text: "AM7: Stejnosměrný proud v obvodech střídavého proudu" },
                     { value: "AM8-1", text: "AM8-1: Vyzařovaná magnetická pole: Střední úroveň" },
-                    { value: "AM8-2", text: "AM8-2: Vyzařovaná magnetická pole: Vysoká úroveň" },
+                    { value: "AM8-2", text: "AM8-2: Vysoká úroveň" },
                     { value: "AM9-1", text: "AM9-1: Elektrická pole: Zanedbatelná úroveň (Normální)" },
-                    { value: "AM9-2", text: "AM9-2: Elektrická pole: Střední úroveň" },
-                    { value: "AM9-3", text: "AM9-3: Elektrická pole: Vysoká úroveň" },
+                    { value: "AM9-2", text: "AM9-2: Střední úroveň" },
+                    { value: "AM9-3", text: "AM9-3: Vysoká úroveň" },
                     { value: "AM9-4", text: "AM9-4: Velmi vysoká úroveň" },
                     { value: "AM21", text: "AM21: Indukované oscilující napětí nebo proudy" },
                     { value: "AM22-1", text: "AM22-1: Šířené vedením (nanosekundy): Zanedbatelná úroveň (Normální)" },
-                    { value: "AM22-2", text: "AM22-2: Šířené vedením (nanosekundy): Střední úroveň" },
-                    { value: "AM22-3", text: "AM22-3: Šířené vedením (nanosekundy): Vysoká úroveň" },
-                    { value: "AM22-4", text: "AM22-4: Šířené vedením (nanosekundy): Velmi vysoká úroveň" },
+                    { value: "AM22-2", text: "AM22-2: Střední úroveň" },
+                    { value: "AM22-3", text: "AM22-3: Vysoká úroveň" },
+                    { value: "AM22-4", text: "AM22-4: Velmi vysoká úroveň" },
                     { value: "AM23-1", text: "AM23-1: Šířené vedením (milisekundy/mikrosekundy): Kontrolovaná úroveň (Normální)" },
-                    { value: "AM23-2", text: "AM23-2: Šířené vedením (milisekundy/mikrosekundy): Střední úroveň" },
-                    { value: "AM23-3", text: "AM23-3: Šířené vedením (milisekundy/mikrosekundy): Vysoká úroveň" },
+                    { value: "AM23-2", text: "AM23-2: Střední úroveň" },
+                    { value: "AM23-3", text: "AM23-3: Vysoká úroveň" },
                     { value: "AM24-1", text: "AM24-1: Oscilační přechodové jevy šířené vedením: Střední úroveň" },
-                    { value: "AM24-2", text: "AM24-2: Oscilační přechodové jevy šířené vedením: Vysoká úroveň" },
+                    { value: "AM24-2", text: "AM24-2: Vysoká úroveň" },
                     { value: "AM25-1", text: "AM25-1: Jevy vyzařované s vysokým kmitočtem: Zanedbatelná úroveň (Normální)" },
-                    { value: "AM25-2", text: "AM25-2: Jevy vyzařované s vysokým kmitočtem: Střední úroveň" },
-                    { value: "AM25-3", text: "AM25-3: Jevy vyzařované s vysokým kmitočtem: Vysoká úroveň" },
+                    { value: "AM25-2", text: "AM25-2: Střední úroveň" },
+                    { value: "AM25-3", text: "AM25-3: Vysoká úroveň" },
                     { value: "AM31-1", text: "AM31-1: Elektrostatické výboje: Nízká úroveň (Normální)" },
-                    { value: "AM31-2", text: "AM31-2: Elektrostatické výboje: Střední úroveň" },
-                    { value: "AM31-3", text: "AM31-3: Elektrostatické výboje: Vysoká úroveň" },
-                    { value: "AM31-4", text: "AM31-4: Elektrostatické výboje: Velmi vysoká úroveň" },
+                    { value: "AM31-2", text: "AM31-2: Střední úroveň" },
+                    { value: "AM31-3", text: "AM31-3: Vysoká úroveň" },
+                    { value: "AM31-4", text: "AM31-4: Velmi vysoká úroveň" },
                     { value: "AM41-1", text: "AM41-1: Ionizace" },
                 ]
             },
